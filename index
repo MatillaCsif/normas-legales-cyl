@@ -3,43 +3,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Repositorio de Normas</title>
+    <title>Mi Repositorio de Normas - Dinámico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    
+    <script src="normasData.js"></script>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-            color: #333;
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #333; margin: 0; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; background-color: #fff; border-radius: 8px; overflow: hidden; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .tag-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            margin: 0.25rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            background-color: #e2e8f0; /* gray-200 */
+            color: #4a5568; /* gray-700 */
+            border: 1px solid #cbd5e0; /* gray-300 */
         }
-        h1 {
-            color: #0056b3;
+        .tag-pill:hover {
+            background-color: #cbd5e0; /* gray-300 */
         }
-        .document-list a {
-            display: block;
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ddd;
+        .definition-tooltip {
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 5px 10px;
             border-radius: 5px;
-            text-decoration: none;
-            color: #007bff;
+            font-size: 0.8em;
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            max-width: 200px;
+            text-align: center;
         }
-        .document-list a:hover {
-            background-color: #e9e9e9;
+
+        /* Estilos del modal (visor PDF) */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed; /* Posición fija */
+            z-index: 1001; /* Z-index alto para estar encima de todo */
+            left: 0;
+            top: 0;
+            width: 100%; /* Ancho completo */
+            height: 100%; /* Alto completo */
+            overflow: auto; /* Habilitar scroll si es necesario */
+            background-color: rgba(0,0,0,0.8); /* Fondo semi-transparente negro */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 0;
+            border: 1px solid #888;
+            width: 90%; /* Ajusta el ancho */
+            height: 90%; /* Ajusta el alto */
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            overflow: hidden; /* Para que el contenido no se salga del modal */
+        }
+        .modal-header {
+            padding: 10px 20px;
+            background-color: #0056b3;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body {
+            flex-grow: 1; /* Para que ocupe el espacio restante */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto; /* Para que el canvas del PDF pueda hacer scroll */
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #pdfCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            display: block; /* Elimina espacio extra bajo el canvas */
+            margin: auto; /* Centra el canvas */
         }
     </style>
 </head>
-<body>
-    <h1>Bienvenido a tu Repositorio de Normas</h1>
-    <p>Aquí puedes acceder a los documentos que has subido. Haz clic en cada uno para probar el "salto al PDF".</p>
+<body class="bg-gray-100">
 
-    <div class="document-list">
-        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf" target="_blank">Ver Decreto 59/2013 (abre en nueva pestaña)</a>
-        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/CONVENIO+COLECTIVO+21-06-2023.pdf" target="_blank">Ver Convenio Colectivo (abre en nueva pestaña)</a>
-        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/ACUERDO_COMPL.+ESPEC.+33+AGENTES+MEDIOAMBIENTALES.pdf" target="_blank">Ver Acuerdo Agentes Medioambientales (abre en nueva pestaña)</a>
-        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/Acta%20(modificada)+CP+14-6-2024.pdf" target="_blank">Ver Acta (modificada) CP 14-6-2024 (abre en nueva pestaña)</a>
+    <div class="container mt-8 p-6 shadow-lg">
+        <h1 class="text-3xl font-bold text-blue-700 mb-6 text-center">Repositorio de Normas</h1>
+        <p class="text-lg text-gray-700 mb-6 text-center">Accede y explora las normas de Castilla y León. ¡Busca por palabra clave, tipo o temática!</p>
+
+        <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label for="searchInput" class="block text-gray-700 text-sm font-bold mb-2">Buscar palabra clave:</label>
+                <input type="text" id="searchInput" placeholder="Ej. permiso, vacaciones..."
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div>
+                <label for="typeFilter" class="block text-gray-700 text-sm font-bold mb-2">Filtrar por tipo de norma:</label>
+                <select id="typeFilter" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="">Todos los tipos</option>
+                    <option value="Decreto">Decreto</option>
+                    <option value="Convenio Colectivo">Convenio Colectivo</option>
+                    <option value="Acuerdo">Acuerdo</option>
+                    <option value="Acta">Acta</option>
+                </select>
+            </div>
+            <div>
+                <label for="yearFilter" class="block text-gray-700 text-sm font-bold mb-2">Filtrar por año de emisión:</label>
+                <select id="yearFilter" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="">Todos los años</option>
+                    </select>
+            </div>
+        </div>
+        
+        <div id="resultsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+
+        <div id="noResults" class="hidden text-center text-gray-500 mt-8">
+            No se encontraron resultados para los criterios de búsqueda.
+        </div>
     </div>
 
-    <p>Pronto construiremos la funcionalidad de búsqueda y visualización contextual.</p>
+    <div id="pdfViewerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="pdfViewerTitle" class="text-xl font-bold">Visor de Documento</h2>
+                <span class="close-button" onclick="closePdfViewer()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <canvas id="pdfCanvas"></canvas>
+            </div>
+            <div class="modal-footer p-4 bg-gray-100 flex justify-center items-center gap-4">
+                <button id="prevPage" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Página Anterior</button>
+                <span id="pageInfo" class="text-gray-700">Página <span id="currentPageNum">1</span> de <span id="totalPages">1</span></span>
+                <button id="nextPage" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Página Siguiente</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="definitionTooltip" class="definition-tooltip"></div>
+
+    <script>
+        // Asegúrate de que PDF.js worker esté configurado
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        const searchInput = document.getElementById('searchInput');
+        const typeFilter = document.getElementById('typeFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const noResultsMessage = document.getElementById('noResults');
+        const definitionTooltip = document.getElementById('definitionTooltip');
+
+        // Variables para el visor de PDF
+        const pdfViewerModal = document.getElementById('pdfViewerModal');
+        const pdfCanvas = document.getElementById('pdfCanvas');
+        const pdfViewerTitle = document.getElementById('pdfViewerTitle');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const currentPageNumSpan = document.getElementById('currentPageNum');
+        const totalPagesSpan = document.getElementById('totalPages');
+
+        let pdfDoc = null;
+        let pageNum = 1;
+
+        // Función para renderizar el PDF en el canvas
+        async function renderPage(num) {
+            if (!pdfDoc) return;
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({ scale: 1.5 }); // Escala inicial
+            pdfCanvas.height = viewport.height;
+            pdfCanvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: pdfCanvas.getContext('2d'),
+                viewport: viewport
+            };
+            await page.render(renderContext).promise;
+            currentPageNumSpan.textContent = num;
+        }
+
+        // Abrir el visor de PDF
+        async function openPdfInViewer(pdfUrl, title, initialPage = 1) {
+            pdfViewerTitle.textContent = title;
+            pdfViewerModal.style.display = 'flex'; // Mostrar el modal
+
+            try {
+                const loadingTask = pdfjsLib.getDocument(pdfUrl);
+                pdfDoc = await loadingTask.promise;
+                totalPagesSpan.textContent = pdfDoc.numPages;
+                pageNum = parseInt(initialPage) || 1; // Ir a la página inicial si se especifica
+                await renderPage(pageNum);
+            } catch (error) {
+                console.error('Error al cargar el PDF:', error);
+                alert('No se pudo cargar el documento PDF. Asegúrate de que la URL es correcta y el archivo está disponible.');
+                closePdfViewer();
+            }
+        }
+
+        // Navegación del PDF
+        prevPageBtn.addEventListener('click', () => {
+            if (pageNum <= 1) return;
+            pageNum--;
+            renderPage(pageNum);
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            renderPage(pageNum);
+        });
+
+        // Cerrar el visor de PDF
+        function closePdfViewer() {
+            pdfViewerModal.style.display = 'none';
+            pdfDoc = null; // Reiniciar el documento
+            pageNum = 1;
+        }
+
+        // Cerrar modal si se hace clic fuera del contenido
+        window.addEventListener('click', (event) => {
+            if (event.target == pdfViewerModal) {
+                closePdfViewer();
+            }
+        });
+
+        // Mostrar u ocultar tooltip de definición
+        function showDefinition(event, tag) {
+            const definition = definicionesGlobales[tag.toLowerCase()];
+            if (definition) {
+                definitionTooltip.textContent = definition;
+                definitionTooltip.style.display = 'block';
+                definitionTooltip.style.left = (event.pageX + 10) + 'px';
+                definitionTooltip.style.top = (event.pageY + 10) + 'px';
+            }
+        }
+
+        function hideDefinition() {
+            definitionTooltip.style.display = 'none';
+        }
+
+        // Función para renderizar las normas
+        function renderNormas(filteredNormas) {
+            resultsContainer.innerHTML = ''; // Limpiar resultados anteriores
+            if (filteredNormas.length === 0) {
+                noResultsMessage.classList.remove('hidden');
+                return;
+            }
+            noResultsMessage.classList.add('hidden');
+
+            filteredNormas.forEach(norma => {
+                const card = document.createElement('div');
+                card.className = 'card p-6 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200';
+                
+                // Construir la lista de palabras clave con tooltips
+                const keywordsHtml = norma.palabrasClave.map(kc => 
+                    `<span class="tag-pill" 
+                           onmouseover="showDefinition(event, '${kc.palabra}')" 
+                           onmouseout="hideDefinition()">
+                        ${kc.palabra}
+                    </span>`
+                ).join('');
+
+                card.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">${norma.titulo}</h3>
+                    <p class="text-sm text-gray-600 mb-1"><strong>Tipo:</strong> ${norma.tipo}</p>
+                    <p class="text-sm text-gray-600 mb-1"><strong>Ámbito:</strong> ${norma.ambito}</p>
+                    <p class="text-sm text-gray-600 mb-1"><strong>Fecha:</strong> ${norma.fechaEmision}</p>
+                    <p class="text-gray-700 mb-4">${norma.descripcionCorta}</p>
+                    
+                    <div class="mb-4">
+                        <h4 class="text-md font-semibold text-gray-700 mb-2">Palabras Clave:</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${keywordsHtml || '<span class="text-sm text-gray-500">No hay palabras clave definidas.</span>'}
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
+                        <a href="#" class="text-blue-600 hover:underline font-medium" 
+                           onclick="openPdfInViewer('${norma.urlPdf}', '${norma.titulo}', 1); return false;">
+                           Ver Documento Completo
+                        </a>
+                        <span class="text-sm text-gray-500">ID: ${norma.id}</span>
+                    </div>
+                `;
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        // Función de filtrado y búsqueda
+        function filterAndSearchNormas() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedType = typeFilter.value;
+            const selectedYear = yearFilter.value;
+
+            const filtered = normas.filter(norma => {
+                const matchesSearch = searchTerm === '' || 
+                                      norma.titulo.toLowerCase().includes(searchTerm) ||
+                                      norma.descripcionCorta.toLowerCase().includes(searchTerm) ||
+                                      norma.tematicas.some(tema => tema.toLowerCase().includes(searchTerm)) ||
+                                      norma.palabrasClave.some(kc => kc.palabra.toLowerCase().includes(searchTerm));
+                                      // Aquí podrías añadir búsqueda en contextos de palabras clave si el texto es extenso
+
+                const matchesType = selectedType === '' || norma.tipo === selectedType;
+                const matchesYear = selectedYear === '' || norma.fechaEmision.startsWith(selectedYear);
+
+                return matchesSearch && matchesType && matchesYear;
+            });
+            renderNormas(filtered);
+        }
+
+        // Inicializar filtros y renderizar al cargar la página
+        function initializeApp() {
+            // Rellenar filtro de años
+            const years = [...new Set(normas.map(norma => norma.fechaEmision.substring(0, 4)))].sort((a,b) => b - a);
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            });
+
+            // Añadir event listeners para los filtros y búsqueda
+            searchInput.addEventListener('keyup', filterAndSearchNormas);
+            typeFilter.addEventListener('change', filterAndSearchNormas);
+            yearFilter.addEventListener('change', filterAndSearchNormas);
+
+            // Renderizar todas las normas al inicio
+            renderNormas(normas);
+        }
+
+        // Ejecutar al cargar la página
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+    </script>
 </body>
 </html>
