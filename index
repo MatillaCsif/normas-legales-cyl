@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Repositorio de Normas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+        }
+        .document-list a {
+            display: block;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .document-list a:hover {
+            background-color: #e9e9e9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bienvenido a tu Repositorio de Normas</h1>
+    <p>Aquí puedes acceder a los documentos que has subido. Haz clic en cada uno para probar el "salto al PDF".</p>
+
+    <div class="document-list">
+        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf" target="_blank">Ver Decreto 59/2013 (abre en nueva pestaña)</a>
+        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/CONVENIO+COLECTIVO+21-06-2023.pdf" target="_blank">Ver Convenio Colectivo (abre en nueva pestaña)</a>
+        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/ACUERDO_COMPL.+ESPEC.+33+AGENTES+MEDIOAMBIENTALES.pdf" target="_blank">Ver Acuerdo Agentes Medioambientales (abre en nueva pestaña)</a>
+        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/Acta%20(modificada)+CP+14-6-2024.pdf" target="_blank">Ver Acta (modificada) CP 14-6-2024 (abre en nueva pestaña)</a>
+    </div>
+
+    <p>Pronto construiremos la funcionalidad de búsqueda y visualización contextual.</p>
+</body>
+</html>
