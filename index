@@ -6,7 +6,8 @@
     <title>Mi Repositorio de Normas - Dinámico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    
+
+
     <script src="normasData.js"></script>
 
     <style>
