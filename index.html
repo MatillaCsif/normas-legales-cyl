@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Buscador Normativo Avanzado – Castilla y León</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8fafc; margin: 0; }
+    header { background: #334155; color: white; padding: 20px; text-align: center; }
+    .container { display: flex; flex-wrap: wrap; padding: 20px; gap: 20px; }
+    .filtros { width: 300px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    .filtros h3 { margin-top: 0; }
+    input, button { margin: 8px 0; width: 100%; padding: 8px; }
+    .contenido { flex: 1; min-width: 300px; }
+    .resultados { background: #fff; border-radius: 8px; padding: 15px; border: 1px solid #cbd5e1; }
+    .tarjeta { background: #f1f5f9; padding: 15px; margin-bottom: 20px; border-left: 5px solid #0ea5e9; border-radius: 6px; }
+    .tarjeta h3 { margin-top: 0; }
+    .etiquetas span { background: #e2e8f0; padding: 5px 8px; border-radius: 12px; font-size: 0.85em; margin: 4px; display: inline-block; cursor: pointer; }
+    #definicion { position: fixed; bottom: 20px; right: 20px; background: #fefce8; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 300px; display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📘 Buscador Normativo Avanzado – Castilla y León</h1>
+</header>
+
+<div class="container">
+  <div class="filtros">
+    <h3>🔍 Palabra clave</h3>
+    <input type="text" id="keyword" placeholder="Ej: lactancia, jornada, violencia">
+    <h3>📅 Filtrar por fecha</h3>
+    <label>Desde: <input type="date" id="desde"></label>
+    <label>Hasta: <input type="date" id="hasta"></label>
+    <button onclick="buscarPorPalabraClave()">Buscar</button>
+  </div>
+
+  <div class="contenido">
+    <div class="resultados" id="resultados">
+      <p>👈 Introduce una palabra clave para ver artículos relacionados.</p>
+    </div>
+  </div>
+</div>
+
+<div id="definicion"></div>
+<script>
+// 🧠 Diccionario jurídico
+const definiciones = {
+  "jornada": "Duración total del trabajo anual del personal funcionario.",
+  "cómputo anual": "Cantidad de horas anuales previstas como jornada máxima.",
+  "permiso retribuido": "Tiempo autorizado de ausencia con salario.",
+  "reducción retributiva": "Disminución proporcional del sueldo por jornada reducida.",
+  "conciliación": "Medidas para compatibilizar vida laboral y familiar.",
+  "violencia de género": "Situación legal de protección para funcionarias víctimas.",
+  "guarda legal": "Reducción de jornada para cuidar menores o dependientes.",
+  "lactancia": "Permiso vinculado al cuidado del menor tras el nacimiento.",
+  "nacimiento prematuro": "Situación que otorga permiso especial ampliado.",
+  "maternidad": "Permiso por nacimiento, adopción o acogimiento.",
+  "familia": "Situaciones vinculadas a hijos, cónyuge o ascendientes.",
+  "enfermedad grave": "Permiso por cuidado de familiar con afección grave."
+};
+
+// 🔎 Índice de artículos normativos
+const articulos = [
+  {
+    numero: "Artículo 3",
+    titulo: "Duración máxima de la jornada anual",
+    etiquetas: ["jornada", "cómputo anual", "funcionarios", "días excluidos"],
+    documento: "decreto_59_2013.html",
+    norma: "Decreto 59/2013 – Jornada y permisos",
+    fecha: "2013-09-05"
+  },
+  {
+    numero: "Artículo 5",
+    titulo: "Jornada reducida por interés particular",
+    etiquetas: ["jornada reducida", "reducción retributiva", "funcionarios"],
+    documento: "decreto_59_2013.html",
+    norma: "Decreto 59/2013 – Jornada y permisos",
+    fecha: "2013-09-05"
+  },
+  {
+    numero: "Artículo 39",
+    titulo: "Permisos retribuidos por fallecimiento, mudanza o funciones sindicales",
+    etiquetas: ["permiso retribuido", "fallecimiento familiar", "mudanza", "funciones sindicales", "conciliación"],
+    documento: "decreto_59_2013.html",
+    norma: "Decreto 59/2013 – Jornada y permisos",
+    fecha: "2013-09-05"
+  },
+  {
+    numero: "Artículo 45",
+    titulo: "Lactancia, prematuridad y guarda legal",
+    etiquetas: ["lactancia", "nacimiento prematuro", "guarda legal", "conciliación", "reducción jornada", "familia"],
+    documento: "decreto_59_2013.html",
+    norma: "Decreto 59/2013 – Jornada y permisos",
+    fecha: "2013-09-05"
+  },
+  {
+    numero: "Artículo 46",
+    titulo: "Permiso para cuidado de familiares enfermos",
+    etiquetas: ["enfermedad grave", "cuidado familiar", "permiso retribuido", "familia", "conciliación"],
+    documento: "decreto_59_2013.html",
+    norma: "Decreto 59/2013 – Jornada y permisos",
+    fecha: "2013-09-05"
+  },
+  {
+    numero: "Artículo 48",
+    titulo: "Permisos por violencia de género",
+    etiquetas: ["violencia de género", "protección funcionaria", "conciliación", "familia"],
+    documento: "decreto_59_2013.html",
+    norma: "Decreto 59/2013 – Jornada y permisos",
+    fecha: "2013-09-05"
+  },
+  {
+    numero: "Artículo 49",
+    titulo: "Permisos por maternidad y paternidad",
+    etiquetas: ["maternidad", "familia", "permiso retribuido", "funcionarios"],
+    documento: "decreto_59_2013.html",
+    norma: "Decreto 59/2013 – Jornada y permisos",
+    fecha: "2013-09-05"
+  }
+];
+// 🔍 Función de búsqueda por palabra clave y fechas
+function buscarPorPalabraClave() {
+  const kw = document.getElementById("keyword").value.trim().toLowerCase();
+  const desde = document.getElementById("desde").value;
+  const hasta = document.getElementById("hasta").value;
+
+  const resultados = articulos.filter(a => {
+    const coincideKW = kw === "" || a.etiquetas.some(e => e.toLowerCase().includes(kw));
+    const coincideFecha = (!desde || a.fecha >= desde) && (!hasta || a.fecha <= hasta);
+    return coincideKW && coincideFecha;
+  });
+
+  mostrarResultados(resultados);
+}
+
+// 🧾 Mostrar resultados en pantalla
+function mostrarResultados(lista) {
+  const cont = document.getElementById("resultados");
+  cont.innerHTML = "";
+
+  if (lista.length === 0) {
+    cont.innerHTML = "<p>⚠️ No se encontraron artículos relacionados.</p>";
+    return;
+  }
+
+  lista.forEach(a => {
+    const div = document.createElement("div");
+    div.className = "tarjeta";
+    div.innerHTML = `
+      <h3>${a.numero}: ${a.titulo}</h3>
+      <p><strong>Norma:</strong> ${a.norma}</p>
+      <p><strong>Fecha:</strong> ${a.fecha}</p>
+      <p><strong>Etiquetas:</strong></p>
+      <div class="etiquetas">
+        ${a.etiquetas.map(e => `<span onclick="mostrarDefinicion('${e}')">${e}</span>`).join("")}
+      </div>
+      <p><a href="${a.documento}" target="_blank">🔗 Ver documento completo</a></p>
+    `;
+    cont.appendChild(div);
+  });
+}
+
+// 📘 Mostrar definición emergente
+function mostrarDefinicion(palabra) {
+  const defBox = document.getElementById("definicion");
+  const definicion = definiciones[palabra.toLowerCase()];
+  if (definicion) {
+    defBox.innerHTML = `<strong>${palabra}:</strong> ${definicion}`;
+    defBox.style.display = "block";
+  } else {
+    defBox.style.display = "none";
+  }
+}
+</script>
+
+</body>
+</html>
+
+
