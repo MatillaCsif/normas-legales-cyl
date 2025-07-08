@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Buscador Normativo Avanzado – Castilla y León</title>
+  <title>Buscador Normativo – Decreto 59/2013</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8fafc; margin: 0; }
     header { background: #334155; color: white; padding: 20px; text-align: center; }
@@ -21,7 +21,7 @@
 <body>
 
 <header>
-  <h1>📘 Buscador Normativo Avanzado – Castilla y León</h1>
+  <h1>📘 Buscador Normativo – Decreto 59/2013</h1>
 </header>
 
 <div class="container">
@@ -42,83 +42,66 @@
 </div>
 
 <div id="definicion"></div>
+
 <script>
-// 🧠 Diccionario jurídico
+// Diccionario jurídico
 const definiciones = {
   "jornada": "Duración total del trabajo anual del personal funcionario.",
-  "cómputo anual": "Cantidad de horas anuales previstas como jornada máxima.",
   "permiso retribuido": "Tiempo autorizado de ausencia con salario.",
-  "reducción retributiva": "Disminución proporcional del sueldo por jornada reducida.",
   "conciliación": "Medidas para compatibilizar vida laboral y familiar.",
   "violencia de género": "Situación legal de protección para funcionarias víctimas.",
   "guarda legal": "Reducción de jornada para cuidar menores o dependientes.",
   "lactancia": "Permiso vinculado al cuidado del menor tras el nacimiento.",
-  "nacimiento prematuro": "Situación que otorga permiso especial ampliado.",
   "maternidad": "Permiso por nacimiento, adopción o acogimiento.",
   "familia": "Situaciones vinculadas a hijos, cónyuge o ascendientes.",
   "enfermedad grave": "Permiso por cuidado de familiar con afección grave."
 };
 
-// 🔎 Índice de artículos normativos
+// Índice de artículos
 const articulos = [
   {
     numero: "Artículo 3",
     titulo: "Duración máxima de la jornada anual",
-    etiquetas: ["jornada", "cómputo anual", "funcionarios", "días excluidos"],
-    documento: "decreto_59_2013.html",
-    norma: "Decreto 59/2013 – Jornada y permisos",
-    fecha: "2013-09-05"
-  },
-  {
-    numero: "Artículo 5",
-    titulo: "Jornada reducida por interés particular",
-    etiquetas: ["jornada reducida", "reducción retributiva", "funcionarios"],
-    documento: "decreto_59_2013.html",
-    norma: "Decreto 59/2013 – Jornada y permisos",
+    etiquetas: ["jornada", "funcionarios"],
+    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+    norma: "Decreto 59/2013",
     fecha: "2013-09-05"
   },
   {
     numero: "Artículo 39",
     titulo: "Permisos retribuidos por fallecimiento, mudanza o funciones sindicales",
-    etiquetas: ["permiso retribuido", "fallecimiento familiar", "mudanza", "funciones sindicales", "conciliación"],
-    documento: "decreto_59_2013.html",
-    norma: "Decreto 59/2013 – Jornada y permisos",
+    etiquetas: ["permiso retribuido", "conciliación"],
+    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+    norma: "Decreto 59/2013",
     fecha: "2013-09-05"
   },
   {
     numero: "Artículo 45",
     titulo: "Lactancia, prematuridad y guarda legal",
-    etiquetas: ["lactancia", "nacimiento prematuro", "guarda legal", "conciliación", "reducción jornada", "familia"],
-    documento: "decreto_59_2013.html",
-    norma: "Decreto 59/2013 – Jornada y permisos",
-    fecha: "2013-09-05"
-  },
-  {
-    numero: "Artículo 46",
-    titulo: "Permiso para cuidado de familiares enfermos",
-    etiquetas: ["enfermedad grave", "cuidado familiar", "permiso retribuido", "familia", "conciliación"],
-    documento: "decreto_59_2013.html",
-    norma: "Decreto 59/2013 – Jornada y permisos",
+    etiquetas: ["lactancia", "guarda legal", "conciliación", "familia"],
+    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+    norma: "Decreto 59/2013",
     fecha: "2013-09-05"
   },
   {
     numero: "Artículo 48",
     titulo: "Permisos por violencia de género",
-    etiquetas: ["violencia de género", "protección funcionaria", "conciliación", "familia"],
-    documento: "decreto_59_2013.html",
-    norma: "Decreto 59/2013 – Jornada y permisos",
+    etiquetas: ["violencia de género", "conciliación", "familia"],
+    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+    norma: "Decreto 59/2013",
     fecha: "2013-09-05"
   },
   {
     numero: "Artículo 49",
     titulo: "Permisos por maternidad y paternidad",
-    etiquetas: ["maternidad", "familia", "permiso retribuido", "funcionarios"],
-    documento: "decreto_59_2013.html",
-    norma: "Decreto 59/2013 – Jornada y permisos",
+    etiquetas: ["maternidad", "familia", "permiso retribuido"],
+    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+    norma: "Decreto 59/2013",
     fecha: "2013-09-05"
   }
 ];
-// 🔍 Función de búsqueda por palabra clave y fechas
+
+// Buscar por palabra clave
 function buscarPorPalabraClave() {
   const kw = document.getElementById("keyword").value.trim().toLowerCase();
   const desde = document.getElementById("desde").value;
@@ -133,7 +116,7 @@ function buscarPorPalabraClave() {
   mostrarResultados(resultados);
 }
 
-// 🧾 Mostrar resultados en pantalla
+// Mostrar resultados
 function mostrarResultados(lista) {
   const cont = document.getElementById("resultados");
   cont.innerHTML = "";
@@ -152,7 +135,7 @@ function mostrarResultados(lista) {
       <p><strong>Fecha:</strong> ${a.fecha}</p>
       <p><strong>Etiquetas:</strong></p>
       <div class="etiquetas">
-        ${a.etiquetas.map(e => `<span onclick="mostrarDefinicion('${e}')">${e}</span>`).join("")}
+        ${a.etiquetas.map(e => `<span onclick="buscarPorEtiqueta('${e}')">${e}</span>`).join("")}
       </div>
       <p><a href="${a.documento}" target="_blank">🔗 Ver documento completo</a></p>
     `;
@@ -160,7 +143,16 @@ function mostrarResultados(lista) {
   });
 }
 
-// 📘 Mostrar definición emergente
+// Buscar por etiqueta directamente
+function buscarPorEtiqueta(etiqueta) {
+  const lista = articulos.filter(a =>
+    a.etiquetas.some(e => e.toLowerCase() === etiqueta.toLowerCase())
+  );
+  mostrarResultados(lista);
+  mostrarDefinicion(etiqueta);
+}
+
+// Mostrar definición emergente
 function mostrarDefinicion(palabra) {
   const defBox = document.getElementById("definicion");
   const definicion = definiciones[palabra.toLowerCase()];
@@ -175,5 +167,3 @@ function mostrarDefinicion(palabra) {
 
 </body>
 </html>
-
-
