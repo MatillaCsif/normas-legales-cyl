@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor Interactivo de Actas - Comisión Paritaria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .tag-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            margin: 0.25rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: #e0e7ff; /* indigo-100 */
+            color: #3730a3; /* indigo-800 */
+        }
+        .tag-pill:hover { background-color: #c7d2fe; /* indigo-200 */ }
+        .tag-pill.selected {
+            background-color: #4f46e5; /* indigo-600 */
+            color: #ffffff;
+        }
+        .article-link-icon {
+            cursor: pointer;
+            margin-left: 0.3rem;
+            font-size: 0.9em;
+            color: #2563EB; /* blue-600 */
+            text-decoration: none;
+            display: inline-block; /* Para asegurar que el margen y el tamaño sean correctos */
+        }
+        .article-link-icon:hover {
+            color: #1E40AF; /* blue-800 */
+        }
+        .article-link-icon.unmapped {
+            color: #94a3b8; /* slate-400 */
+            cursor: default;
+        }
+        .article-link-icon.unmapped:hover {
+            color: #94a3b8; /* No cambia al pasar el ratón */
+        }
+        .highlight-warning {
+            background-color: #fffbeb; /* amber-50 */
+            color: #8B5F2A; /* amber-800 */
+            border-left: 4px solid #F59E0B; /* amber-500 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .highlight-warning strong {
+            color: #C2410C; /* orange-700 */
+        }
+        #quickDefinitionBox {
+            background-color: #e0f2fe; /* blue-100 */
+            color: #1e40af; /* blue-900 */
+            border-left: 4px solid #3b82f6; /* blue-500 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            position: absolute; /* Changed to absolute for positioning */
+            border-left: 4px solid #3b82f6;
+            z-index: 1000; /* Ensure it's on top */
+            max-width: 300px; /* Limit width */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
+        }
+        /* Styles for hierarchical checkboxes */
+        .category-list {
+            list-style: none;
+            padding-left: 0; /* Base padding for the main list */
+        }
+        .nested-indent {
+            padding-left: 1.5rem; /* Indentation for all nested lists */
+        }
+        .category-item {
+            margin-top: 0.5rem;
+        }
+        .category-item .category-label {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #374151; /* gray-700 */
+        }
+        .category-item .category-label input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+        /* Removed .subcategory-list as .nested-indent will handle it */
+        .document-item {
+            display: flex;
+            align-items: center;
+            margin-top: 0.5rem;
+            /* Further indent documents is now handled by successive .nested-indent */
+            font-weight: normal;
+        }
+        .document-item input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+        /* Custom style for missing content placeholders */
+        .future-content-placeholder {
+            color: #EF4444 !important; /* red-500, using !important to override default */
+            font-weight: bold !important;
+        }
+        /* Highlight for search terms */
+        .highlight-term {
+            background-color: #fde68a; /* yellow-200 */
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-10">
+            <div class="flex justify-end text-sm text-gray-600 mb-4">
+                <div class="flex flex-col items-end">
+                    <a href="mailto:carlos.matilla.calvo@correo.csif.es" class="hover:underline text-xs" title="Enviar correo electrónico">carlos.matilla.calvo@correo.csif.es</a>
+                    <a href="#user-manual-section" class="hover:underline text-xs mt-1" title="Ver el manual de uso">Manual de Uso</a>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold text-slate-800 mb-2">Repositorio Jurídico-Laboral de Castilla y León</h1>
+            <p class="text-slate-600 mb-4">Herramienta para la UPCSIFSALAMANCA</p>
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <!-- Left Column -->
+                <div class="flex flex-col gap-4">
+                    <a href="CONVENIO+COLECTIVO+21-06-2023.pdf" target="_blank" class="inline-block px-6 py-2 bg-amber-500 text-white font-semibold rounded-md shadow-md hover:bg-amber-600 transition-colors" title="Abrir el Convenio Colectivo">
+                        Consultar Convenio Colectivo
+                    </a>
+                    <a href="Estatuto de los trabajadores a 11062025.php.pdf" target="_blank" class="inline-block px-6 py-2 bg-yellow-500 text-white font-semibold rounded-md shadow-md hover:bg-yellow-600 transition-colors" title="Abrir el Estatuto de los Trabajadores">
+                        Consultar Estatuto de los Trabajadores
+                    </a>
+                </div>
+                <!-- Right Column -->
+                <div class="flex flex-col gap-4">
+                    <a href="Ley+7-2005-consolidado.pdf" target="_blank" class="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 transition-colors" title="Abrir la Ley de Función Pública">
+                        Consultar Ley de Función Pública de CyL
+                    </a>
+                    <a href="TRLEBEP a 11062025.pdf" target="_blank" class="inline-block px-6 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 transition-colors" title="Abrir el Estatuto Básico del Empleado Público">
+                        Consultar TRLEBEP
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-2xl font-semibold mb-5 text-slate-700">Buscar y Filtrar Acuerdos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-5">
+                <div>
+                    <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">Buscar por palabra clave:</label>
+                    <input type="text" id="searchInput" placeholder="Escriba aquí para buscar..." list="searchSuggestions" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2" title="Busca por tema, resumen o etiquetas. Usa comillas para búsqueda exacta.">
+                    <datalist id="searchSuggestions"></datalist>
+                </div>
+                <div>
+                    <label for="dateFilter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Fecha:</label>
+                    <select type="date" id="dateFilter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm" title="Filtra los documentos por la fecha de publicación.">
+                        <option value="all">Todas las Fechas</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="documentTypeFilter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Tipo de Documento:</label>
+                    <select id="documentTypeFilter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm" title="Filtra los documentos por su tipo (Acta, Convenio, Decreto, etc.).">
+                        <option value="all">Todos los Tipos</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sortOrder" class="block text-sm font-medium text-gray-700 mb-1">Ordenar por:</label>
+                    <select id="sortOrder" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:ring-indigo-500 sm:text-sm rounded-md shadow-sm" title="Ordena los resultados por fecha o tema.">
+                        <option value="date-desc">Fecha (Más reciente)</option>
+                        <option value="date-asc">Fecha (Más antigua)</option>
+                        <option value="topic-asc">Tema (A-Z)</option>
+                    </select>
+                </div>
+                <div class="col-span-full"> <!-- Make this div span full width -->
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Colectivo:</label>
+                    <div class="mt-1 flex flex-wrap gap-4">
+                        <label class="inline-flex items-center" title="Muestra todos los documentos disponibles.">
+                            <input type="radio" name="aplicabilidadFilter" value="todos" class="form-radio h-4 w-4 text-indigo-600" checked>
+                            <span class="ml-2 text-gray-700">Todos los documentos</span>
+                        </label>
+                        <label class="inline-flex items-center" title="Muestra solo documentos relevantes para personal laboral.">
+                            <input type="radio" name="aplicabilidadFilter" value="laborales" class="form-radio h-4 w-4 text-indigo-600">
+                            <span class="ml-2 text-gray-700">Solo Laborales</span>
+                        </label>
+                        <label class="inline-flex items-center" title="Muestra solo documentos relevantes para funcionarios.">
+                            <input type="radio" name="aplicabilidadFilter" value="funcionarios" class="form-radio h-4 w-4 text-indigo-600">
+                            <span class="ml-2 text-gray-700">Solo Funcionarios</span>
+                        </label>
+                        <label class="inline-flex items-center" title="Muestra documentos aplicables tanto a personal laboral como a funcionarios.">
+                            <input type="radio" name="aplicabilidadFilter" value="ambos" class="form-radio h-4 w-4 text-indigo-600">
+                            <span class="ml-2 text-gray-700">Ambos Colectivos</span>
+                        </label>
+                    </div>
+                </div>
+               
+                <!-- Two columns for document selection -->
+                <div class="col-span-full grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Documentos a buscar (Laborales) <span id="laboralesDocCount" class="text-gray-500 font-normal text-sm">(0/0 seleccionados)</span></h3>
+                        <div class="flex gap-2 mb-2">
+                            <button id="selectAllLaborales" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs hover:bg-blue-200 transition-colors" title="Seleccionar todos los documentos de la sección Laborales">Seleccionar todo</button>
+                            <button id="deselectAllLaborales" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs hover:bg-blue-200 transition-colors" title="Deseleccionar todos los documentos de la sección Laborales">Deseleccionar todo</button>
+                        </div>
+                        <div id="laboralesDocumentSelection" class="mt-1">
+                            <!-- Laborales checkboxes will be populated here by JavaScript -->
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Documentos a buscar (Funcionarios) <span id="funcionariosDocCount" class="text-gray-500 font-normal text-sm">(0/0 seleccionados)</span></h3>
+                        <div class="flex gap-2 mb-2">
+                            <button id="selectAllFuncionarios" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs hover:bg-blue-200 transition-colors" title="Seleccionar todos los documentos de la sección Funcionarios">Seleccionar todo</button>
+                            <button id="deselectAllFuncionarios" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs hover:bg-blue-200 transition-colors" title="Deseleccionar todos los documentos de la sección Funcionarios">Deseleccionar todo</button>
+                        </div>
+                        <div id="funcionariosDocumentSelection" class="mt-1">
+                            <!-- Funcionarios checkboxes will be populated here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Filtrar por Etiquetas:</label>
+                <div id="tagPillsContainer" class="flex flex-wrap gap-2 mb-4">
+                    </div>
+                <div class="flex items-center gap-3">
+                    <button id="clearTagsButton" class="px-5 py-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 transition-colors text-sm font-medium" title="Borra todas las etiquetas seleccionadas.">Limpiar Selección</button>
+                    <a id="viewDocumentByTagButton" class="px-5 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 transition-colors text-sm cursor-pointer" title="Ver el documento asociado a la etiqueta seleccionada (si solo hay una).">Ver Documento Asociado</a>
+                </div>
+            </div>
+        </div>
+       
+        <div id="quickDefinitionBox" class="bg-blue-50 p-4 rounded-lg shadow-inner mb-8 hidden">
+            <h3 class="text-lg font-semibold text-blue-800 mb-2">Definición Rápida: <span id="quickDefinitionTerm" class="font-bold"></span></h3>
+            <p id="quickDefinitionContent" class="text-blue-700 text-sm"></p>
+        </div>
+
+        <div id="highlightWarning" class="highlight-warning hidden" role="alert">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.503 2.705-1.503 3.47 0l3.051 6.059a3.5 3.5 0 01-.271 3.528A3.5 3.5 0 0113.5 16h-7a3.5 3.5 0 01-2.919-5.313l3.051-6.059zM12 9a1 1 0 11-2 0 1 1 0 012 0zm-1 4a1 1 0 10-2 0 1 1 0 002 0z" clip-rule="evenodd"></path></svg>
+            <div class="ml-3 text-sm font-medium">
+                <strong>Nota:</strong> La función de resaltado automático en el PDF ("<strong id="highlightKeywordInWarning"></strong>") puede no ser compatible con todos los navegadores o visores. Si no ve el texto resaltado, por favor, use la función de búsqueda (<strong>Ctrl+F</strong> o <strong>Cmd+F</strong> en Mac) en el propio visor de PDF.
+            </div>
+        </div>
+
+        <div class="text-right text-sm text-gray-600 mb-4">
+            <span id="resultsCount">Mostrando X de Y resultados.</span>
+        </div>
+
+        <div id="results-by-year-container">
+            <!-- Results grouped by year will be rendered here -->
+        </div>
+    </div>
+
+    <script>
+        // Mapeo de artículos y temas a sus páginas en los diferentes documentos PDF
+        const documentArticleMap = {
+            "CONVENIO+COLECTIVO+21-06-2023.pdf": {
+                "82": { page: 40, tema: "Permisos retribuidos" },
+                "101": { page: 55, tema: "Complementos retributivos" },
+                "106": { page: 58, tema: "Complemento de Vialidad" },
+                "135": { page: 76, tema: "Movilidad" },
+                "18": { page: 21, tema: "Ingreso de personal" },
+                "16": { page: 19, tema: "Grupos profesionales y titulaciones" },
+                "42": { page: 30, tema: "Jornada y horario" },
+                "47": { page: 32, tema: "Interrupción diaria de la jornada (comida)" },
+                "77": { page: 41, tema: "Permisos por motivos familiares" },
+                "83": { page: 44, tema: "Suspensión del contrato de trabajo por paternidad" }
+            },
+            "Decreto 136_2002, de 26 de diciembre, de la Junta de Castilla y León, Reglamento regula Escala de Agentes Medioambientales del Cuerpo de Ayudantes Facultativos BOCYL-D-27122002-4.pdf": {
+                "1": { page: 3, tema: "Objeto" },
+                "5": { page: 4, tema: "Funciones de la Escala" },
+                "6": { page: 5, tema: "Jornada y Horario" },
+                "7": { page: 5, tema: "Vacaciones" },
+                "9": { page: 5, tema: "Derechos y Deberes" },
+                "11": { page: 6, tema: "Armas" }
+            },
+            "Ley+7-2005-consolidado.pdf": {
+                "2": { page: 12, tema: "Ámbito de aplicación" },
+                "14": { page: 18, tema: "Personal funcionario" },
+                "17": { page: 20, tema: "Personal laboral" },
+                "32": { page: 24, tema: "Cuerpos y Escalas de Administración Especial" },
+                "38": { page: 26, tema: "Jubilación" },
+                "48": { page: 28, tema: "Permisos de los funcionarios públicos" },
+                "58": { page: 34, tema: "Vacaciones" },
+                "59": { page: 34, tema: "Asuntos particulares" },
+                "61": { page: 35, tema: "Permisos para la conciliación de la vida familiar y laboral" },
+                "76": { page: 44, tema: "Conceptos retributivos" },
+                "107": { page: 56, tema: "Pactos y acuerdos" },
+            },
+            "DGFP CONSULTA SOBRE EL PERMISO POR ENFERMEDAD GRAVE DE FAMILIAR 15_03_2017.pdf": {
+                "39": { page: 1, tema: "Permisos de carácter general" },
+                "40": { page: 2, tema: "Normas comunes" },
+                "77": { page: 2, tema: "Permisos por motivos familiares" }
+            },
+            "DGFP ARMONIZACIÓN DE PERMISOS Y LICENCIAS  15_03_2017.pdf": {
+                "3": { page: 1, tema: "Días de ausencia sin deducción de retribuciones" }
+            },
+            "DGFP_PLAZO_MAXIMO_VACACIONES_IT_PERMISOS_PATERNIDAD_MATERNIDAD_RIESGO_EMBARZO_LACTANCIA_2018_01_31.pdf": {
+                "30": { page: 2, tema: "Cambios o interrupciones en el período de disfrute (vacaciones)" } // For Decreto 59/2013 Art. 30
+            },
+            "DGFP Instrucción+colaboración+tribunales13_07_2017.pdf": {
+                // No specific article mappings for this instruction, it's about the instruction itself.
+            },
+            "DGFP complementación de la prestación económica en situaciones de incapacidad temporal y para la justificación de ausencias por enfermedad 04_09_2018.pdf": {
+                // No specific article mappings for this instruction, it's about the instruction itself.
+            },
+            "DGFP INSTRUCCIÓN licencia por asuntos propios o de la licencia sin retribución 07_11_2017.pdf": {
+                // No specific article mappings for this instruction, it's about the instruction itself.
+            },
+            "Estatuto de los trabajadores a 11062025.php.pdf": { // New entry for Estatuto de los Trabajadores
+                "1": { page: 17, tema: "Ámbito de aplicación y fuentes" },
+                "3": { page: 19, tema: "Fuentes de la relación laboral" },
+                "4": { page: 20, tema: "Derechos laborales" },
+                "5": { page: 22, tema: "Deberes laborales" },
+                "11": { page: 35, tema: "Contrato formativo" },
+                "12": { page: 43, tema: "Contrato a tiempo parcial y de relevo" },
+                "14": { page: 52, tema: "Periodo de prueba" },
+                "15": { page: 55, tema: "Duración del contrato de trabajo" },
+                "16": { page: 66, tema: "Contrato fijo-discontinuo" },
+                "17": { page: 70, tema: "No discriminación en las relaciones laborales" },
+                "18": { page: 72, tema: "Inviolabilidad de la persona del trabajador" },
+                "19": { page: 74, tema: "Seguridad y salud en el trabajo" },
+                "20": { page: 76, tema: "Dirección y control de la actividad laboral" },
+                "20 bis": { page: 78, tema: "Derechos a la intimidad en relación con el entorno digital y a la desconexión" },
+                "21": { page: 80, tema: "Pacto de no concurrencia y de permanencia en la empresa" },
+                "22": { page: 82, tema: "Sistema de clasificación profesional" },
+                "23": { page: 83, tema: "Promoción y formación profesional en el trabajo" },
+                "24": { page: 84, tema: "Ascensos" },
+                "25": { page: 85, tema: "Promoción económica" },
+                "26": { page: 86, tema: "Del salario" },
+                "27": { page: 94, tema: "Salario mínimo interprofesional" },
+                "28": { page: 95, tema: "Igualdad de remuneración por razón de sexo" },
+                "29": { page: 100, tema: "Liquidación y pago" },
+                "30": { page: 102, tema: "Imposibilidad de la prestación" },
+                "31": { page: 102, tema: "Gratificaciones extraordinarias" },
+                "32": { page: 103, tema: "Garantías del salario" },
+                "33": { page: 104, tema: "El Fondo de Garantía Salarial" },
+                "34": { page: 111, tema: "Jornada" },
+                "35": { page: 122, tema: "Horas extraordinarias" },
+                "36": { page: 125, tema: "Trabajo nocturno, trabajo a turnos y ritmo de trabajo" },
+                "37": { page: 133, tema: "Descanso semanal, fiestas y permisos" },
+                "38": { page: 136, tema: "Vacaciones anuales" },
+                "39": { page: 141, tema: "Movilidad funcional" },
+                "40": { page: 144, tema: "Movilidad geográfica" },
+                "41": { page: 147, tema: "Modificaciones sustanciales de condiciones de trabajo" },
+                "42": { page: 150, tema: "Subcontratación de obras y servicios" },
+                "43": { page: 151, tema: "Cesión de trabajadores" },
+                "44": { page: 152, tema: "La sucesión de empresa" },
+                "45": { page: 153, tema: "Causas y efectos de la suspensión" },
+                "46": { page: 155, tema: "Excedencias" },
+                "47": { page: 157, tema: "Reducción de jornada o suspensión del contrato por causas económicas, técnicas, organizativas o de producción o derivadas de fuerza mayor" },
+                "47 bis": { page: 158, tema: "Mecanismo RED de Flexibilidad y Estabilización del Empleo" },
+                "48": { page: 159, tema: "Suspensión con reserva de puesto de trabajo" },
+                "48 bis": { page: 160, tema: "Permiso parental" },
+                "49": { page: 161, tema: "Extinción del contrato" },
+                "50": { page: 166, tema: "Extinción por voluntad del trabajador" },
+                "51": { page: 168, tema: "Despido colectivo" },
+                "52": { page: 173, tema: "Extinción del contrato por causas objetivas" },
+                "53": { page: 176, tema: "Forma y efectos del despido por causas objetivas" },
+                "54": { page: 180, tema: "Despido disciplinario" },
+                "55": { page: 181, tema: "Forma y efectos del despido disciplinario" },
+                "56": { page: 185, tema: "Despido improcedente" },
+                "57": { page: 186, tema: "Procedimiento concursal" },
+                "58": { page: 188, tema: "Faltas y sanciones de los trabajadores" },
+                "59": { page: 190, tema: "Prescripción de acciones derivadas del contrato" },
+                "60": { page: 191, tema: "Prescripción de infracciones y faltas" },
+                "61": { page: 192, tema: "Participación" },
+                "62": { page: 193, tema: "Delegados de personal" },
+                "63": { page: 194, tema: "Comité de empresa" },
+                "64": { page: 195, tema: "Derechos de información y consulta y competencias" },
+                "65": { page: 198, tema: "Capacidad y sigilo profesional" },
+                "66": { page: 199, tema: "Crédito horario" },
+                "67": { page: 200, tema: "Mandato de los representantes" },
+                "68": { page: 200, tema: "Garantías" },
+                "69": { page: 201, tema: "Procedimiento electoral" },
+                "70": { page: 202, tema: "Promoción de elecciones" },
+                "71": { page: 203, tema: "Composición de la mesa electoral" },
+                "72": { page: 204, tema: "Representantes de quienes presten servicios en trabajos fijos-discontinuos y de trabajadores no fijos" },
+                "73": { page: 205, tema: "Censo electoral" },
+                "74": { page: 206, tema: "Presentación de candidaturas" },
+                "75": { page: 207, tema: "Votación" },
+                "76": { page: 208, tema: "Reclamaciones" },
+                "77": { page: 209, tema: "Las asambleas de trabajadores" },
+                "78": { page: 210, tema: "Convocatoria y funcionamiento de la asamblea" },
+                "79": { page: 211, tema: "Votaciones en la asamblea" },
+                "80": { page: 212, tema: "Locales y tablón de anuncios" },
+                "81": { page: 213, tema: "Validez del contrato" },
+                "82": { page: 214, tema: "Naturaleza y efectos de los convenios" },
+                "83": { page: 216, tema: "Unidades de negociación" },
+                "84": { page: 217, tema: "Concurrencia de convenios" },
+                "85": { page: 220, tema: "Contenido mínimo del convenio" },
+                "86": { page: 221, tema: "Vigencia del convenio" },
+                "87": { page: 223, tema: "Legitimación para negociar" },
+                "88": { page: 224, tema: "Comisión negociadora" },
+                "89": { page: 225, tema: "Tramitación" },
+                "90": { page: 226, tema: "Registro y publicación" },
+                "91": { page: 227, tema: "Aplicación e interpretación" },
+                "92": { page: 228, tema: "Adhesión y extensión" }
+            },
+            "TRLEBEP a 11062025.pdf": { // New entry for TRLEBEP
+                "1": { page: 9, tema: "Objeto del Estatuto" },
+                "2": { page: 9, tema: "Ámbito de aplicación" },
+                "7": { page: 10, tema: "Normativa aplicable al personal laboral" },
+                "8": { page: 11, tema: "Concepto y clases de empleados públicos" },
+                "9": { page: 11, tema: "Funcionarios de carrera" },
+                "10": { page: 11, tema: "Funcionarios interinos" },
+                "11": { page: 12, tema: "Personal laboral" },
+                "12": { page: 12, tema: "Personal eventual" },
+                "13": { page: 12, tema: "Personal directivo profesional" },
+                "14": { page: 13, tema: "Derechos individuales" },
+                "15": { page: 14, tema: "Derechos individuales ejercidos colectivamente" },
+                "16": { page: 14, tema: "Concepto, principios y modalidades de la carrera profesional de los funcionarios de carrera" },
+                "17": { page: 14, tema: "Carrera horizontal de los funcionarios de carrera" },
+                "18": { page: 15, tema: "Promoción interna de los funcionarios de carrera" },
+                "19": { page: 15, tema: "Carrera profesional y promoción del personal laboral" },
+                "20": { page: 15, tema: "La evaluación del desempeño" },
+                "21": { page: 16, tema: "Determinación de las cuantías y de los incrementos retributivos" },
+                "22": { page: 16, tema: "Retribuciones de los funcionarios" },
+                "23": { page: 16, tema: "Retribuciones básicas" },
+                "24": { page: 16, tema: "Retribuciones complementarias" },
+                "25": { page: 17, tema: "Retribuciones de los funcionarios interinos" },
+                "26": { page: 17, tema: "Retribuciones de los funcionarios en prácticas" },
+                "27": { page: 17, tema: "Retribuciones del personal laboral" },
+                "28": { page: 17, tema: "Indemnizaciones" },
+                "29": { page: 17, tema: "Retribuciones diferidas" },
+                "30": { page: 17, tema: "Deducción de retribuciones" },
+                "31": { page: 17, tema: "Principios generales (negociación colectiva)" },
+                "32": { page: 18, tema: "Negociación colectiva, representación y participación del personal laboral" },
+                "33": { page: 18, tema: "Negociación colectiva" },
+                "34": { page: 18, tema: "Mesas de Negociación" },
+                "35": { page: 19, tema: "Constitución y composición de las Mesas de Negociación" },
+                "36": { page: 19, tema: "Mesas Generales de Negociación" },
+                "37": { page: 20, tema: "Materias objeto de negociación" },
+                "38": { page: 21, tema: "Pactos y Acuerdos" },
+                "39": { page: 22, tema: "Órganos de representación" },
+                "40": { page: 22, tema: "Funciones y legitimación de los órganos de representación" },
+                "41": { page: 23, tema: "Garantías de la función representativa del personal" },
+                "42": { page: 23, tema: "Duración de la representación" },
+                "43": { page: 24, tema: "Promoción de elecciones a Delegados y Juntas de Personal" },
+                "44": { page: 24, tema: "Procedimiento electoral" },
+                "45": { page: 24, tema: "Solución extrajudicial de conflictos colectivos" },
+                "46": { page: 25, tema: "Derecho de reunión" },
+                "47": { page: 25, tema: "Jornada de trabajo de los funcionarios públicos" },
+                "47 bis": { page: 25, tema: "Teletrabajo" },
+                "48": { page: 26, tema: "Permisos de los funcionarios públicos" },
+                "49": { page: 27, tema: "Permisos por motivos de conciliación de la vida personal, familiar y laboral, por razón de violencia de género o de violencia sexual y para las víctimas de terrorismo y sus familiares directos" },
+                "50": { page: 31, tema: "Vacaciones de los funcionarios públicos" },
+                "51": { page: 31, tema: "Jornada de trabajo, permisos y vacaciones del personal laboral" },
+                "52": { page: 31, tema: "Deberes de los empleados públicos. Código de Conducta" },
+                "53": { page: 32, tema: "Principios éticos" },
+                "54": { page: 32, tema: "Principios de conducta" },
+                "55": { page: 33, tema: "Principios rectores (acceso al empleo público)" },
+                "56": { page: 33, tema: "Requisitos generales (acceso al empleo público)" },
+                "57": { page: 34, tema: "Acceso al empleo público de nacionales de otros Estados" },
+                "58": { page: 34, tema: "Acceso al empleo público de funcionarios españoles de Organismos Internacionales" },
+                "59": { page: 34, tema: "Personas con discapacidad" },
+                "60": { page: 35, tema: "Órganos de selección" },
+                "61": { page: 35, tema: "Sistemas selectivos" },
+                "62": { page: 36, tema: "Adquisición de la condición de funcionario de carrera" },
+                "63": { page: 36, tema: "Causas de pérdida de la condición de funcionario de carrera" },
+                "64": { page: 36, tema: "Renuncia" },
+                "65": { page: 36, tema: "Pérdida de la nacionalidad" },
+                "66": { page: 36, tema: "Pena principal o accesoria de inhabilitación absoluta o especial para cargo público" },
+            },
+            "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf": {
+                "1": { page: 3, tema: "Objeto del Decreto" },
+                "2": { page: 4, tema: "Ámbito subjetivo de aplicación" },
+                "3": { page: 4, tema: "Jornada máxima anual ordinaria" },
+                "4": { page: 5, tema: "Jornada de dedicación especial y jornadas especiales" },
+                "5": { page: 5, tema: "Jornada reducida por interés particular" },
+                "6": { page: 6, tema: "Distribución regular de la jornada" },
+                "7": { page: 6, tema: "Distribución irregular de la jornada" },
+                "8": { page: 6, tema: "Compensación horaria" },
+                "9": { page: 6, tema: "Calendario laboral" },
+                "10": { page: 6, tema: "Órganos competentes (calendario laboral)" },
+                "11": { page: 7, tema: "Vigencia (calendario laboral)" },
+                "12": { page: 7, tema: "Compensaciones de jornada (días 24 y 31 dic)" },
+                "13": { page: 7, tema: "Horario general en las dependencias administrativas" },
+                "14": { page: 8, tema: "Adaptación del horario por razones de conciliación" },
+                "15": { page: 9, tema: "Adaptación del horario por razón de violencia de género" },
+                "16": { page: 9, tema: "Horarios especiales" },
+                "17": { page: 10, tema: "Trabajo efectivo" },
+                "18": { page: 10, tema: "Pausa (tiempo de descanso)" },
+                "19": { page: 10, tema: "Tiempo para la formación" },
+                "20": { page: 11, tema: "Objeto del control horario" },
+                "21": { page: 11, tema: "Responsables del control horario" },
+                "22": { page: 12, tema: "Medios de control horario" },
+                "23": { page: 12, tema: "Justificación de ausencias" },
+                "24": { page: 13, tema: "Normas generales (vacaciones)" },
+                "25": { page: 13, tema: "Reglas adicionales (vacaciones)" },
+                "26": { page: 14, tema: "Régimen de disfrute (vacaciones)" },
+                "27": { page: 14, tema: "Supuestos de inactividad estacional (vacaciones)" },
+                "28": { page: 14, tema: "Otros supuestos (vacaciones)" },
+                "29": { page: 15, tema: "Normas generales de procedimiento (vacaciones)" },
+                "30": { page: 15, tema: "Cambios o interrupciones en el período de disfrute (vacaciones)" },
+                "31": { page: 16, tema: "Acumulación de otros permisos (vacaciones)" },
+                "32": { page: 16, tema: "Licencia por enfermedad" },
+                "33": { page: 16, tema: "Licencia por riesgo durante el embarazo y la lactancia" },
+                "34": { page: 16, tema: "Normas comunes a estas licencias" },
+                "35": { page: 16, tema: "Licencia por asuntos propios" },
+                "36": { page: 17, tema: "Licencia por estudios" },
+                "37": { page: 17, tema: "Licencia para la colaboración en Programas de Cooperación y Ayuda Humanitaria" },
+                "38": { page: 18, tema: "Licencia para la participación en Programas y Proyectos de Ayuda y Cooperación al Desarrollo" },
+                "39": { page: 18, tema: "Permisos de carácter general" },
+                "40": { page: 20, tema: "Normas comunes (permisos de carácter general)" },
+                "41": { page: 21, tema: "Permisos por maternidad y paternidad" },
+                "42": { page: 21, tema: "Disfrute a tiempo parcial (maternidad/paternidad)" },
+                "43": { page: 22, tema: "Normas de acreditación (maternidad/paternidad)" },
+                "44": { page: 22, tema: "Derechos económicos (maternidad/paternidad)" },
+                "45": { page: 23, tema: "Permisos para la conciliación de la vida familiar y laboral" },
+                "46": { page: 25, tema: "Normas comunes (permisos conciliación)" },
+                "47": { page: 25, tema: "Acreditación documental (permisos conciliación)" },
+                "48": { page: 26, tema: "Permiso por razón de violencia de género" },
+                "49": { page: 26, tema: "Protección de la intimidad (violencia de género)" },
+                "50": { page: 27, tema: "Órganos competentes (licencias y permisos)" },
+                "51": { page: 27, tema: "Delegación y desconcentración de competencias" }
+            }
+        };
+
+        const quickDefinitionMap = {
+            "lactancia": "Permiso retribuido para el cuidado de un hijo menor de doce meses, que puede ser una hora de ausencia o reducción de jornada. En caso de parto múltiple, el tiempo se incrementa proporcionalmente.",
+            "parto múltiple": "Nacimiento de dos o más hijos de un mismo parto. Implica un incremento proporcional en la duración de permisos como el de lactancia.",
+            "enfermedad grave": "Afección de salud de un familiar que justifica la concesión de permisos especiales para su cuidado. El concepto de 'grave' se interpreta de forma flexible para la conciliación.",
+            "días naturales": "Días que transcurren ininterrumpidamente, incluyendo fines de semana y festivos. Los permisos computados en días naturales suelen disfrutarse de forma consecutiva.",
+            "días hábiles": "Días laborables, excluyendo fines de semana y festivos. Algunos permisos, como el de enfermedad grave de familiar, pueden disfrutarse de forma discontinua si son en días hábiles.",
+            "incapacidad temporal": "Situación en la que un trabajador está imposibilitado temporalmente para el desempeño de su trabajo y requiere asistencia sanitaria, con o sin baja médica.",
+            "ausencia": "Falta de presencia en el puesto de trabajo. La normativa puede regular días de ausencia justificada por enfermedad que no constituyan incapacidad temporal.",
+            "convenio colectivo": "Acuerdo entre los representantes de los trabajadores y los empleadores que establece las condiciones laborales, salariales y de otra índole para el personal laboral de un sector o empresa.",
+            "función pública": "Marco normativo que regula la relación de los empleados públicos (funcionarios y, subsidiariamente, personal laboral) con la Administración, incluyendo derechos, deberes, retribuciones y permisos.",
+            "estatutario": "Referente al Estatuto Básico del Empleado Público (EBEP), ley fundamental que establece las bases del régimen jurídico de los funcionarios de carrera y el régimen aplicable al personal laboral al servicio de las Administraciones Públicas.",
+            "reclasificación": "Proceso de cambio de un puesto o categoría profesional a otra, generalmente con implicaciones en retribuciones y funciones, dentro de la administración pública.",
+            "promoción interna": "Sistema de acceso que permite a los empleados públicos progresar en su carrera dentro de la misma Administración, ocupando puestos de superior grupo o categoría.",
+            "oposiciones": "Pruebas selectivas para el acceso al empleo público, que consisten en la superación de uno o varios ejercicios para evaluar la capacidad y aptitud de los aspirantes.",
+            "temarios": "Conjunto de materias o contenidos que deben estudiar los aspirantes a procesos selectivos para el acceso al empleo público (oposiciones, concursos-oposición).",
+            "movilidad": "Posibilidad de cambiar de puesto de trabajo o de centro dentro de la Administración, ya sea por motivos funcionales, de salud, o por solicitud del empleado.",
+            "riesgos laborales": "Conjunto de factores que pueden causar daños a la salud de los trabajadores derivados del trabajo. La prevención de riesgos laborales busca eliminarlos o reducirlos.",
+            "empleo público": "Conjunto de puestos de trabajo y personal al servicio de las Administraciones Públicas, incluyendo tanto a funcionarios como a personal laboral.",
+            "vacaciones": "Derecho a un período de descanso anual retribuido para los empleados públicos, cuya duración y condiciones de disfrute están reguladas por la normativa.",
+            "asuntos particulares": "Días de permiso retribuido que los empleados públicos pueden disfrutar por motivos personales, sin necesidad de justificación específica, y cuya cantidad puede aumentar con la antigüedad.",
+            "jubilación parcial": "Modalidad de jubilación en la que el trabajador combina la percepción de una parte de la pensión con un contrato de trabajo a tiempo parcial.",
+            "jornada concentrada": "Distribución del horario de trabajo que agrupa las horas en menos días o en bloques más largos, resultando en días de descanso más extensos.",
+            "reducción jornada": "Disminución de la duración de la jornada de trabajo diaria, semanal o anual, generalmente por motivos de conciliación, salud o familiares, y que puede implicar una reducción proporcional de las retribuciones.",
+            "nacimiento": "Hecho biológico que da lugar a diversos permisos y derechos de conciliación laboral y familiar para los progenitores, tanto por vía legal como convencional.",
+            "adopción": "Proceso legal por el cual una persona o pareja asume la paternidad o maternidad de un menor ajeno, otorgando los mismos derechos y deberes que los hijos biológicos, incluyendo permisos laborales.",
+            "acogimiento": "Medida de protección a la infancia que permite a una familia acoger a un menor, temporal o permanentemente, con los derechos de conciliación familiar que se aplican a la paternidad/maternidad/adopción.",
+            "paternidad": "Derecho del progenitor a la suspensión del contrato de trabajo por el nacimiento, adopción o acogimiento de un hijo, con una duración y condiciones específicas reguladas por ley.",
+            "maternidad": "Derecho de la progenitora a la suspensión del contrato de trabajo por el nacimiento, adopción o acogimiento de un hijo, con una duración y condiciones específicas reguladas por ley, incluyendo la baja por maternidad.",
+            "riesgo embarazo": "Situación de riesgo para la salud de la trabajadora o del feto durante el embarazo, que puede justificar la suspensión del contrato de trabajo if not es posible adaptar el puesto.",
+            "riesgo lactancia": "Situación de riesgo para la salud de la trabajadora o del lactante durante el periodo de lactancia natural, que puede justificar la suspensión del contrato de trabajo if not es posible adaptar el puesto.",
+            "lactancia acumulada": "Opción de acumular el permiso diario por lactancia de un hijo menor de doce meses en jornadas completas de descanso, en lugar de reducir la jornada cada día.",
+            "Estatuto de los Trabajadores": "Normativa fundamental que regula las relaciones laborales de los trabajadores por cuenta ajena en España, estableciendo derechos y deberes tanto para empleados como para empleadores.",
+            "TRLEBEP": "Real Decreto Legislativo 5/2015, de 30 de octubre, por el que se aprueba el texto refundido de la Ley del Estatuto Básico del Empleado Público (TREBEP), que establece las bases del régimen estatutario de los funcionarios de carrera y el régimen aplicable al personal laboral al servicio de las Administraciones Públicas.",
+            "pruebas selectivas": "Procesos de selección para el acceso al empleo público, que pueden incluir la colaboración de empleados públicos en días no laborables con compensación horaria.",
+            "baja médica": "Documento emitido por un facultativo que justifica la incapacidad temporal de un trabajador o la ausencia por enfermedad sin necesidad de incapacidad temporal oficial.",
+            "licencia": "Permiso para ausentarse del trabajo, con o sin retribución, por motivos personales (asuntos propios) o laborales. Su duración y condiciones están reguladas por la normativa.",
+            "asuntos propios": "Licencia sin retribución que los empleados públicos pueden solicitar por motivos personales, con una duración limitada y subordinada a las necesidades del servicio.",
+            "sin retribución": "Tipo de licencia que no implica el cobro de la retribución durante el período de ausencia, aunque el tiempo puede ser computable a efectos de antigüedad.",
+            "jornada laboral": "El tiempo de trabajo que el empleado público debe dedicar a sus funciones, regulado en el Decreto 59/2013 y otras normativas.",
+            "control horario": "Sistema de registro y verificación del cumplimiento de la jornada y presencia en el puesto de trabajo."
+        };
+
+        // Define the hierarchical structure of documents and their display names
+        const documentCategories = {
+            'Laborales': {
+                'Normativa Estatal': {
+                    'Estatuto de los Trabajadores': {
+                        'Estatuto de los trabajadores a 11062025.php.pdf': 'Estatuto de los Trabajadores'
+                    }
+                },
+                'Normativa Autonómica': {
+                    'General': { // New category
+                        'Convenios Colectivos': {
+                            'CONVENIO+COLECTIVO+21-06-2023.pdf': 'Convenio Colectivo 21 Jun 2023'
+                        },
+                        'Leyes': {}, // Placeholder
+                        'Decretos': {}, // Placeholder
+                        'Órdenes': {}, // Placeholder
+                        'Instrucciones': {}, // Placeholder
+                        'Circulares': {} // Placeholder
+                    },
+                    'Específica': { // New category
+                        'Enseñanza': {}, // Placeholder
+                        'Sanidad': {},   // Placeholder
+                        'AGCYL': {}      // Placeholder
+                    }
+                },
+                'Interpretación Autonómica': {
+                    'Comisión Paritaria Convenio Colectivo': {
+                        'Acta (modificada)+CP+20-03-2024.pdf': 'Acta CP 20 Mar 2024',
+                        'Acta (modificada)+CP+25-9-2023,0.pdf': 'Acta CP 25 Sep 2023',
+                        'Acta (modificada)+CP+26-10-2023.pdf': 'Acta CP 26 Oct 2023',
+                        'Acta (modificada)+CP+14-6-2024.pdf': 'Acta CP 14 Jun 2024'
+                    },
+                    'Interpretación Salamanca': {
+                        'Educación': {},
+                        'Sanidad y Familia': {},
+                        'Restos': {}
+                    }
+                },
+                'Sentencias': { // New top-level category for Sentencias
+                    'AGCYL': {},
+                    'Enseñanza': {},
+                    'Sanidad': {}
+                }
+            },
+            'Funcionarios': {
+                'Normativa Estatal': {
+                    'TRLEBEP': {
+                        'TRLEBEP a 11062025.pdf': 'TRLEBEP'
+                    }
+                },
+                'Normativa Autonómica': {
+                    'General': { // New category
+                        'Leyes': {
+                            'Ley+7-2005-consolidado.pdf': 'Ley de Función Pública 7/2005'
+                        },
+                        'Decretos': {
+                            'Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf': 'Decreto 59/2013',
+                            // NUEVO DECRETO-LEY 3/2018
+                            'Decreto-ley 3_2018 se habilita el incremento de las retribuciones abono IT del personal al servicio del sector publico-consolidado.pdf': 'Decreto-ley 3/2018'
+                        },
+                        'Órdenes': {
+                            'Orden+HAC-2-2013 a 1206202522.pdf': 'Orden HAC/2/2013'
+                        },
+                        'Instrucciones': {
+                             'Instrucción+VCFPyGA+complementación+IT (1).pdf': 'Instrucción IT y Ausencias 2018' // Added new instruction
+                        }, 
+                        'Circulares': {} // Placeholder
+                    },
+                    'Específica': { // New category
+                        'Agentes Medioambientales': { // This will contain the specific AM docs
+                            'Decreto 136_2002, de 26 de diciembre, de la Junta de Castilla y León, Reglamento regula Escala de Agentes Medioambientales del Cuerpo de Ayudantes Facultativos BOCYL-D-27122002-4.pdf': 'Decreto 136/2002 Agentes Medioambientales',
+                            'ACUERDO_COMPL.+ESPEC.+33+AGENTES+MEDIOAMBIENTALES.pdf': 'Acuerdo Complemento Agentes Medioambientales'
+                        },
+                        'Enseñanza': {}, // Placeholder
+                        'Sanidad': {},   // Placeholder
+                        'AGCYL': {}      // Placeholder
+                    }
+                },
+                'Interpretación Autonómica': {
+                    'Dirección General de Función Pública (DGFP)': {
+                        'DGFP PERMISO DE LACTANCIA EN CASO DE PARTO MÚLTIPLE 16_05_2017.pdf': 'Lactancia Parto Múltiple 2017',
+                        'DGFP ACLARACIÓN DEL CRITERIO DERIVADO DE LA CONSULTA SOBRE EL PERMISO POR ENFERMEDAD GRAVE DE FAMILIAR 27_03_2017.pdf': 'Aclaración Enfermedad Grave 2017',
+                        'DGFP CONSULTA SOBRE EL PERMISO POR ENFERMEDAD GRAVE DE FAMILIAR 15_03_2017.pdf': 'Consulta Enfermedad Grave 2017',
+                        'DGFP ARMONIZACIÓN DE PERMISOS Y LICENCIAS  15_03_2017.pdf': 'Armonización Permisos 2017',
+                        'DGFP Criterio dias adicionales vacaciones asuntos particulares  jubilacion parcial acumulada 12_05_2017.pdf': 'Vacaciones Jubilación Parcial 2017',
+                        'DGFP REDUCCIÓN DE JORNADA POR ENFERMEDAD MUY GRAVE DE FAMILIAR DE PRIMER 13_07_2017.pdf': 'Reducción Jornada Familiar 2017',
+                        'DGFP COMPATIBILIDAD ENTRE EL PERMISO POR NACIMIENTO ADOPCIÓN O ACOGIMIENTO PERMANENTE Y LA SUSPENSION DEL CONTRATO POR PATERNIDAD PREVISTOS PARA EL PERSONAL LABORAL 13_07_2017.pdf': 'Compatibilidad Permiso Paternidad 2017',
+                        'DGFP_PLAZO_MAXIMO_VACACIONES_IT_PERMISOS_PATERNIDAD_MATERNIDAD_RIESGO_EMBARZO_LACTANCIA_2018_01_31.pdf': 'Plazo Vacaciones IT Maternidad 2018',
+                        'DGFP Instrucción+colaboración+tribunales13_07_2017.pdf': 'Colaboración Tribunales 2017',
+                        'DGFP complementación de la prestación económica en situaciones de incapacidad temporal y para la justificación de ausencias por enfermedad 04_09_2018.pdf': 'Complementación IT 2018',
+                        'DGFP INSTRUCCIÓN licencia por asuntos propios o de la licencia sin retribución 07_11_2017.pdf': 'Licencia Asuntos Propios 2017'
+                    }
+                },
+                'Sentencias': { // New top-level category for Sentencias
+                    'AGCYL': {},
+                    'Enseñanza': {},
+                    'Sanidad': {}
+                }
+            }
+        };
+
+        const data = [
+            // Actas de 2024
+            { id: "acta-2024-03-20-1", fecha: "20/03/2024", tema: "Permisos retribuidos (art. 82)", resumen: "Detalle extenso de causas y tiempos de permisos. Discusión sobre el abono de complementos salariales (nocturnidad y atención continuada) durante permisos retribuidos. La Administración lo niega, sindicatos disienten basándose en la continuidad de pago con el convenio anterior y el artículo 85 que establece el derecho a la totalidad de las retribuciones.", pagina: "10-17", etiquetas: ["permiso", "retribuciones", "convenio", "nocturnidad", "atención continuada", "conflicto"], archivo_acta: "Acta (modificada)+CP+20-03-2024.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'],
+              articulos: [ // Added articles for Actas to enable linking
+                  {numero: "Art. 82", tema: "Permisos Retribuidos", resumen: "Detalle de los permisos según el artículo 82 del Convenio Colectivo."},
+                  {numero: "Art. 85", tema: "Derecho a Totalidad de Retribuciones", resumen: "Artículo que establece el derecho a la totalidad de las retribuciones."}
+              ]
+            },
+            { id: "acta-2024-03-20-2", fecha: "20/03/2024", tema: "Trabajo en día de libranza", resumen: "Si un trabajador es llamado por necesidades de servicio a trabajar en su día de libranza (sábado, domingo o festivo), será compensado con el doble de la cantidad establecida para el complemento de atención continuada, más la cantidad correspondiente al complemento de atención continuada por trabajar en festivo. Esta interpretación del artículo 68.4 ya se está aplicando desde julio de 2023.", pagina: "18", etiquetas: ["compensación", "atención continuada", "retribuciones", "convenio"], archivo_acta: "Acta (modificada)+CP+20-03-2024.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'],
+              articulos: [ // Added articles for Actas
+                  {numero: "Art. 68.4", tema: "Compensación por Trabajo en Día de Libranza", resumen: "Regulación de la compensación por trabajo en festivos."}
+              ]
+            },
+           
+            { id: "acta-2024-06-14-1", fecha: "14/06/2024", tema: "Movilidades por protección de la salud", resumen: "Análisis de 32 expedientes de movilidad por protección de la salud tramitados en 2023. CGT denuncia desvíos indebidos de personal del operativo de incendios a puestos de 'conductor de oficina', argumentando que deben adscribirse a puestos del operativo. CCOO critica la insuficiencia de información para un estudio adecuado sobre prevención de riesgos laborales.", pagina: "16-17", etiquetas: ["movilidad", "salud laboral", "CGT", "prevención", "riesgos laborales", "datos"], archivo_acta: "Acta (modificada)+CP+14-6-2024.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2024-06-14-2", fecha: "14/06/2024", tema: "Adaptaciones vs. cambio de categoría", resumen: "Debate sobre si los puestos podrían adaptarse en vez de requerir un cambio de categoría por motivos de salud. CCOO insiste en que muchos casos serían adaptables y propone cruzar datos con servicios de prevención. La Administración señala que los cambios de categoría se dan si una dolencia física lo requiere según informe de prevención.", pagina: "18-19", etiquetas: ["prevención", "adaptación", "riesgos laborales", "salud"], archivo_acta: "Acta (modificada)+CP+14-6-2024.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2024-06-14-3", fecha: "14/06/2024", tema: "Convocatoria pruebas Auxiliar de Carreteras", resumen: "Exposición de los procesos selectivos para acceder a la especialidad de 'Auxiliar de Carreteras-Vigilante de Obra' y 'Auxiliar de Carreteras-Vigilante de Explotación', adaptadas a las características actuales de las oposiciones.", pagina: "4", etiquetas: ["empleo público", "convocatorias", "carreteras", "pruebas selectivas"], archivo_acta: "Acta (modificada)+CP+14-6-2024.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+
+            // Actas de 2023 - Septiembre
+            { id: "acta-2023-09-25-1", fecha: "25/09/2023", tema: "Disposición Adicional 14ª (titulaciones exigidas)", resumen: "Aclaración sobre la Disposición Adicional decimocuarta: hasta el 31/12/2025, las Consejerías pueden exigir titulación específica o genérica para categorías del Anexo I sin acuerdo paritario, para evitar falta de efectivos. Debate sobre la interpretación de 'así como' y si debe ser 'o en su caso', y sobre la equiparación de bachiller a formación profesional de grado medio. Acuerdo para interpretar 'o en su caso' y especificar titulaciones al ECYL.", pagina: "13-14", etiquetas: ["acceso público", "titulaciones", "transitoria", "empleo público"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'],
+              articulos: [
+                  {numero: "Disp. Adicional 14ª", tema: "Titulaciones Exigidas", resumen: "Aclaración sobre la exigencia de titulaciones hasta 31/12/2025."}
+              ]
+            },
+            { id: "acta-2023-09-25-2", fecha: "25/09/2023", tema: "Movilidad por salud y cambio de grupo profesional", resumen: "Solo posible hacia igual o inferior grupo. No puede usarse como provisión general.", pagina: "15", etiquetas: ["movilidad", "salud", "grupo profesional", "prevención"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-3", fecha: "25/09/2023", tema: "Pérdida de requisitos habilitantes (armas, carnet)", resumen: "Celadores que pierden licencia tipo D: no hay previsión clara como sí en otros casos.", pagina: "15-16", etiquetas: ["requisitos", "armas", "licencias", "celador"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-4", fecha: "25/09/2023", tema: "Categoría a extinguir: Maestro de taller", resumen: "Debaten acceso y conversión a Educador Personas con Discapacidad.", pagina: "16-17", etiquetas: ["categoría", "educador", "maestro", "discapacidad", "reclasificación", "promoción interna"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-5", fecha: "25/09/2023", tema: "Aplicación de normativa básica más favorable", resumen: "En permisos y jornada, se aplica lo más beneficioso entre Estatuto y Convenio.", pagina: "18", etiquetas: ["permiso", "estatutario", "derechos", "jornada"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Ambos", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-6", fecha: "25/09/2023", tema: "Medios de solicitud de permisos/vacaciones", resumen: "Conflictos sobre obligatoriedad de herramientas electrónicas (registro vs. app Hermes).", pagina: "20-21", etiquetas: ["solicitudes", "digital", "acceso", "registro", "vacaciones", "permiso"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-7", fecha: "25/09/2023", tema: "Derecho a comida (educación infantil)", resumen: "Media hora no debe recuperarse si están a disposición del alumnado.", pagina: "22-23", etiquetas: ["derechos", "comida", "educación", "jornada"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-8", fecha: "25/09/2023", tema: "Superación periodo de prueba en categorías con cambio de denominación y aptitud médica", resumen: "Se confirma que el periodo de prueba superado en una categoría con denominación anterior es válido tras el cambio de denominación. Se acuerda adaptar el baremo de aptitud médica para personal fijo discontinuo. Se toma nota para aclarar si la Disposición Transitoria Segunda es aplicable a movilidades funcionales.", pagina: "23-24", etiquetas: ["periodo de prueba", "categoría", "movilidad", "salud laboral", "baremo"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-9", fecha: "25/09/2023", tema: "Procesos selectivos pendientes y toma de posesión", resumen: "Resumen del estado de los procesos selectivos pendientes (personal de servicios, auxiliar de enfermería, restauradores, etc.). Muchos están recurridos, lo que retrasa los nombramientos. Se consultará si el personal del operativo de incendios puede tomar posesión antes de finalizar la campaña.", pagina: "24-25", etiquetas: ["oposiciones", "empleo público", "convocatorias", "personal de servicios", "incendios"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-10", fecha: "25/09/2023", tema: "Disfrute de vacaciones y asuntos propios en operativo de incendios", resumen: "Debate sobre el disfrute de vacaciones y asuntos propios para el personal de autobombas que trabaja 5 meses en época de peligro alto. UGT pide uniformidad de criterios y compensación si no se pueden disfrutar. CGT denuncia imposición de vacaciones sin preaviso. La Administración se compromete a buscar garantía de disfrute y unificar criterios.", pagina: "17-21", etiquetas: ["vacaciones", "asuntos particulares", "incendios", "convenio", "derechos"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-11", fecha: "25/09/2023", tema: "Unificación de categorías: Cuidador Técnico de Servicios Asistenciales y Auxiliar de Enfermería", resumen: "Se discute la unificación de categorías y la formación impartida para el desempeño de nuevas funciones (ej. administración de medicamentos). CGT y CCOO discrepan sobre el incremento de funciones para personal que no las tenía encomendadas y la forma de paliar la situación (jubilaciones vs. reorganización).", pagina: "21-24", etiquetas: ["categoría", "cuidador", "auxiliar de enfermería", "formación", "funciones", "reclasificación"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-12", fecha: "25/09/2023", tema: "Reorganización centros de menores y creación de Técnico de Apoyo al Menor", resumen: "La Gerencia de Servicios Sociales informa sobre la reordenación de centros de menores, con la finalización de 21 contratos temporales del Grupo 2 y la contratación de 51 'Técnicos de Apoyo al Menor' (Grupo 3). Sindicatos critican los despidos y la interpretación de la cláusula de mantenimiento de la relación laboral temporal, esperando un proceso más paulatino y la amortización de plazas por jubilación.", pagina: "24-29", etiquetas: ["reorganización", "servicios sociales", "contratación", "despidos", "técnico del menor"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-13", fecha: "25/09/2023", tema: "Complemento por continuidad asistencial para enfermeras", resumen: "La Consejería de Educación informa que las enfermeras de la Gerencia con competencia funcional de enfermeras, pero sin continuidad asistencial, no están dentro de la regulación del artículo 103 del Convenio para el abono de dicho complemento. Cuatro escritos de personas interesadas han sido respondidos negativamente.", pagina: "29-30", etiquetas: ["retribuciones", "complemento", "enfermería"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-14", fecha: "30/09/2023", tema: "Plazas de Maestro de Taller en concurso de traslados", resumen: "UGT consulta si las plazas vacantes de 'Maestro de taller' están detraídas del concurso de traslados, dado que el Convenio establece que se renombrarán automáticamente a 'Educador de personas con discapacidad' al quedar vacantes. La Gerencia de Servicios Sociales lo comprobará.", pagina: "30", etiquetas: ["oposiciones", "maestro", "educador", "discapacidad", "movilidad"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-09-25-15", fecha: "25/09/2023", tema: "Temarios oposiciones Oficial de Primera Conductor", resumen: "CCOO señala que en la convocatoria de Oficial de Primera Conductor no se especifica el número de preguntas por tema. También informa que la Administración ha aceptado algunas de sus propuestas para los temarios de Técnico de Atención Directa y Educador de Personas con Discapacidad.", pagina: "30-31", etiquetas: ["oposiciones", "temarios", "convocatorias", "conductor"], archivo_acta: "Acta (modificada)+CP+25-9-2023,0.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+
+            // Actas de 2023 - Octubre
+            { id: "acta-2023-10-26-1", fecha: "26/10/2023", tema: "Convocatoria Personal de Servicios", resumen: "Se acuerda la convocatoria de 161 plazas por el turno libre. La titulación requerida será el certificado de escolaridad o equivalente.", pagina: "5", etiquetas: ["convocatorias", "empleo público", "personal de servicios"], archivo_acta: "Acta (modificada)+CP+26-10-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-10-26-2", fecha: "26/10/2023", tema: "Integración del personal laboral de la Gerencia de Servicios Sociales", resumen: "Se acuerda que el personal laboral fijo de la GSS que no superó el concurso de méritos se integrará en el VI Convenio Colectivo, asignándoles puestos de trabajo y respetando su grupo y competencia.", pagina: "6-8", etiquetas: ["integración", "servicios sociales", "convenio colectivo"], archivo_acta: "Acta (modificada)+CP+26-10-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-10-26-3", fecha: "26/10/2023", tema: "Bolsa de Empleo de Personal de Servicios", resumen: "La Gerencia de Servicios Sociales informa que en el mes de diciembre se publicará la valoración provisional de méritos de la bolsa de empleo de la competencia funcional de Personal de Servicios.", pagina: "11", etiquetas: ["bolsa de empleo", "personal de servicios", "gerencia servicios sociales"], archivo_acta: "Acta (modificada)+CP+26-10-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-10-26-4", fecha: "26/10/2023", tema: "Convocatoria de promoción interna y libre de ATE-Cuidador", resumen: "CCOO pregunta por la convocatoria de promoción interna y turno libre para ATE-Cuidador. La Administración informa que la Dirección General de Presupuestos está realizando el estudio económico para la re-clasificación profesional.", pagina: "11", etiquetas: ["convocatorias", "promoción interna", "ATE-Cuidador"], archivo_acta: "Acta (modificada)+CP+26-10-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-10-26-5", fecha: "26/10/2023", tema: "Procesos de Estabilización", resumen: "Se acuerda que los procesos de estabilización se realizarán por el sistema de concurso de méritos. CSIF solicita información sobre el número de plazas afectadas.", pagina: "12", etiquetas: ["estabilización", "concurso de méritos", "empleo público"], archivo_acta: "Acta (modificada)+CP+26-10-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-10-26-6", fecha: "26/10/2023", tema: "Modificación de la Relación de Puestos de Trabajo (RPT)", resumen: "CCOO y UGT solicitan la modificación de la RPT en la Consejería de Familia e Igualdad de Oportunidades para que las plazas de ATE-Cuidador se reclasifiquen a Educador Infantil. La Administración lo estudiará.", pagina: "13-14", etiquetas: ["RPT", "ATE-Cuidador", "reclasificación"], archivo_acta: "Acta (modificada)+CP+26-10-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-10-26-7", fecha: "26/10/2023", tema: "Turno de Oficio", resumen: "UGT propone que el personal que trabaje en turno de oficio pueda optar por compensación horaria o económica. La Administración se compromete a estudiarlo.", pagina: "15", etiquetas: ["turno de oficio", "compensación horaria", "remuneración"], archivo_acta: "Acta (modificada)+CP+26-10-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+            { id: "acta-2023-10-26-8", fecha: "26/10/2023", tema: "Temarios oposiciones Oficial de Primera Conductor", resumen: "CCOO señala que en la convocatoria de Oficial de Primera Conductor no se especifica el número de preguntas por tema. También informa que la Administración ha aceptado algunas de sus propuestas para los temarios de Técnico de Atención Directa y Educador de Personas con Discapacidad.", pagina: "17-18", etiquetas: ["oposiciones", "temarios", "convocatorias", "conductor"], archivo_acta: "Acta (modificada)+CP+26-10-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Acta", categoria_jerarquica: ['Laborales', 'Interpretación Autonómica', 'Comisión Paritaria Convenio Colectivo'] },
+           
+            // Dato del CONVENIO+COLECTIVO+21-06-2023.pdf
+            { id: "convenio-colectivo-2023-06-21", fecha: "21/06/2023", tema: "Convenio Colectivo para el Personal Laboral", resumen: "Texto completo del Convenio Colectivo para el Personal Laboral de la Administración General de la Comunidad de Castilla y León y Organismos Autónomos dependientes de esta. Define las condiciones de trabajo, retribuciones, permisos y demás aspectos laborales para el personal laboral. Incluye artículos sobre la jornada, vacaciones, permisos, clasificación profesional, régimen disciplinario, etc.", pagina: "1-90", etiquetas: ["convenio", "laborales", "jornada", "vacaciones", "permisos", "retribuciones", "clasificación profesional", "régimen disciplinario"], archivo_acta: "CONVENIO+COLECTIVO+21-06-2023.pdf", aplicabilidad: "Laborales", tipo_documento: "Convenio", categoria_jerarquica: ['Laborales', 'Normativa Autonómica', 'General', 'Convenios Colectivos'] },
+
+            // Dato del ACUERDO_COMPL.+ESPEC.+33+AGENTES+MEDIOAMBIENTALES.pdf
+            { id: "acuerdo-complemento-2024-08-05", fecha: "05/08/2024", tema: "Creación de Complemento Específico (Agentes Medioambientales)", resumen: "Acuerdo de la Mesa Sectorial de Función Pública para crear el complemento específico con código 33 para Guardería Forestal y otros (Agentes Medioambientales y Agentes Forestales), de 269,00 euros/mes, debido a la complejidad de funciones y condiciones de trabajo. Menciona Art. 76.3.b) de la Ley 7/2005 de Función Pública y Art. 5 del Decreto 136/2002.", pagina: "52-54", etiquetas: ["complemento específico", "agentes medioambientales", "agentes forestales", "retribuciones", "guardería forestal", "función pública"], archivo_acta: "ACUERDO_COMPL.+ESPEC.+33+AGENTES+MEDIOAMBIENTALES.pdf", aplicabilidad: "Funcionarios", tipo_documento: "Acuerdo", categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'Específica', 'Agentes Medioambientales'] },
+           
+            // Dato del Decreto 136_2002, de 26 de diciembre, de la Junta de Castilla y León, Reglamento regula Escala de Agentes Medioambientales del Cuerpo de Ayudantes Facultativos BOCYL-D-27122002-4.pdf
+            { id: "decreto-136-2002", fecha: "27/12/2002", tema: "Reglamento regula Escala de Agentes Medioambientales", resumen: "Decreto por el que se aprueba el Reglamento que regula la Escala de Agentes Medioambientales del Cuerpo de Ayudantes Facultativos de la Comunidad de Castilla y León. Define el objeto, las funciones, jornada, horario, vacaciones, derechos y deberes, y el uso de armas para este cuerpo.", pagina: "1-6", etiquetas: ["agentes medioambientales", "guardería forestal", "funcionarios", "reglamento", "jornada", "vacaciones", "derechos", "deberes", "armas"], archivo_acta: "Decreto 136_2002, de 26 de diciembre, de la Junta de Castilla y León, Reglamento regula Escala de Agentes Medioambientales del Cuerpo de Ayudantes Facultativos BOCYL-D-27122002-4.pdf", aplicabilidad: "Funcionarios", tipo_documento: "Decreto", categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'Específica', 'Agentes Medioambientales'] },
+
+            // Dato de la Ley+7-2005-consolidado.pdf
+            { id: "ley-7-2005", fecha: "24/05/2005", tema: "Ley de la Función Pública de Castilla y León", resumen: "Ley 7/2005 que regula la Función Pública de Castilla y León. Establece el ámbito de aplicación, principios rectores, órganos superiores en materia de función pública, y el régimen jurídico del personal funcionario y laboral, incluyendo permisos, vacaciones, retribuciones, etc. Hace referencia al Estatuto Básico del Empleado Público (EBEP).", pagina: "1-68", etiquetas: ["función pública", "funcionarios", "personal laboral", "EBEP", "derechos", "deberes", "permisos", "vacaciones", "retribuciones", "ley"], archivo_acta: "Ley+7-2005-consolidado.pdf", aplicabilidad: "Ambos", tipo_documento: "Ley", categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Leyes'] },
+
+            // Nuevo dato del Estatuto de los Trabajadores
+            { id: "estatuto-trabajadores-2015-10-23", fecha: "23/10/2015", tema: "Estatuto de los Trabajadores: Texto Refundido", resumen: "Real Decreto Legislativo 2/2015 por el que se aprueba el texto refundido de la Ley del Estatuto de los Trabajadores. Regula las relaciones laborales entre trabajadores y empresarios, abordando aspectos clave como el contrato de trabajo, salarios, jornada, suspensiones y extinciones de contratos, derechos de representación colectiva y negociación colectiva.", pagina: "1-234", etiquetas: ["estatuto de los trabajadores", "laborales", "normativa estatal", "ley", "derechos laborales", "contrato de trabajo", "salario", "jornada", "despido"], archivo_acta: "Estatuto de los trabajadores a 11062025.php.pdf", aplicabilidad: "Laborales", tipo_documento: "Ley", categoria_jerarquica: ['Laborales', 'Normativa Estatal', 'Estatuto de los Trabajadores'] },
+
+            // Nuevo dato del TRLEBEP
+            { id: "trlebep-2015-10-30", fecha: "30/10/2015", tema: "Texto Refundido de la Ley del Estatuto Básico del Empleado Público (TRLEBEP)", resumen: "Real Decreto Legislativo 5/2015, de 30 de octubre, por el que se aprueba el texto refundido de la Ley del Estatuto Básico del Empleado Público (TRLEBEP). Establece las bases del régimen estatutario de los funcionarios públicos, así como las normas aplicables al personal laboral al servicio de las Administraciones Públicas. Regula aspectos como clases de personal, derechos y deberes, carrera profesional, retribuciones, jornada, permisos, vacaciones, acceso al empleo público, situaciones administrativas y régimen disciplinario.", pagina: "1-58", etiquetas: ["TRLEBEP", "funcionarios", "personal laboral", "normativa estatal", "ley", "empleo público", "derechos", "deberes", "carrera profesional", "retribuciones", "jornada", "permisos", "vacaciones", "régimen disciplinario"], archivo_acta: "TRLEBEP a 11062025.pdf", aplicabilidad: "Ambos", tipo_documento: "Ley", categoria_jerarquica: ['Funcionarios', 'Normativa Estatal', 'TRLEBEP'] },
+
+            // NUEVA ORDEN HAC/2/2013
+            {
+                id: "orden-hac-2-2013",
+                fecha: "11/01/2013",
+                tema: "Orden HAC/2/2013: Condiciones del régimen de ausencias al trabajo",
+                resumen: "Esta orden regula los días de ausencia por enfermedad o accidente sin descuento en nómina (hasta 4 días, 3 consecutivos max. si no es IT). Establece el descuento del 50% para ausencias que excedan este límite y los requisitos para su aplicación al personal de la Administración General de Castilla y León y Organismos Autónomos.",
+                pagina: "1-2",
+                etiquetas: ["ausencia", "enfermedad", "accidente", "incapacidad temporal", "retribuciones", "descuento", "nómina", "funcionarios", "personal laboral", "normativa autonómica", "orden"],
+                archivo_acta: "Orden+HAC-2-2013 a 1206202522.pdf",
+                aplicabilidad: "Ambos",
+                tipo_documento: "Orden",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Órdenes'],
+                articulos: [
+                    { numero: "1", tema: "Objeto y ámbito de aplicación", resumen: "Define el propósito y a quién aplica la orden, regulando los días de ausencia sin descuento en nómina y los requisitos para el descuento." },
+                    { numero: "2", tema: "Descuento en nómina", resumen: "Establece la deducción del 50% de las retribuciones para los días de ausencia que superen el límite permitido y no sean IT." },
+                    { numero: "3", tema: "Días de ausencia sin deducción de retribuciones", resumen: "Permite hasta cuatro días de ausencia anual por enfermedad/accidente sin descuento, de los cuales solo tres pueden ser consecutivos, si no hay IT y se justifican." }
+                ]
+            },
+            // NUEVO DOCUMENTO: Decreto-ley 3/2018
+            {
+                id: "decreto-ley-3-2018",
+                fecha: "30/08/2018",
+                tema: "Decreto-ley 3/2018: Incremento retribuciones y 100% abono en IT",
+                resumen: "Este Decreto-ley habilita el incremento de las retribuciones del personal al servicio del sector público de Castilla y León y elimina las limitaciones para el abono del 100% en situaciones de incapacidad temporal (IT). Deroga el Artículo 69 de la Ley 1/2012, que establecía descuentos, y permite retornar al abono íntegro de retribuciones en IT desde el primer día. Menciona la Orden HAC/2/2013 en su contexto histórico.",
+                pagina: "1-6",
+                etiquetas: ["incapacidad temporal", "retribuciones", "sector público", "decreto-ley", "normativa autonómica", "IT", "funcionarios", "personal laboral", "salud", "nómina"],
+                archivo_acta: "Decreto-ley 3_2018 se habilita el incremento de las retribuciones abono IT del personal al servicio del sector publico-consolidado.pdf",
+                aplicabilidad: "Ambos",
+                tipo_documento: "Decreto-ley",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Decretos'],
+                articulos: [
+                    { numero: "Preámbulo", tema: "Justificación y antecedentes", resumen: "Explica la necesidad de adaptar la normativa para el incremento retributivo y la eliminación de limitaciones en IT, haciendo referencia a normativas estatales y autonómicas previas, incluida la Orden HAC/2/2013." },
+                    { numero: "1", tema: "Normas Generales (Incremento Retributivo)", resumen: "Detalla el aumento del 0,25% en las retribuciones y las nuevas cuantías de sueldo, trienios y complemento de destino para funcionarios desde julio de 2018." },
+                    { numero: "2", tema: "Fondos adicionales", resumen: "Establece la posibilidad de destinar un 0,20% adicional de la masa salarial para mejoras de productividad, eficiencia, revisión de complementos específicos, etc." },
+                    { numero: "Disposición derogatoria primera", tema: "Derogación del Art. 69 Ley 1/2012", resumen: "Deroga específicamente el artículo que establecía limitaciones en el abono de retribuciones en situaciones de IT." },
+                    { numero: "Disposición derogatoria segunda", tema: "Derogación Disposición final primera Ley 8/2017", resumen: "Deroga otra disposición relacionada con la Ley de Presupuestos Generales de CyL para 2018." },
+                    { numero: "Disposición final", tema: "Entrada en vigor", resumen: "Establece que el Decreto-Ley entrará en vigor al día siguiente de su publicación." }
+                ]
+            },
+
+
+            // Datos de los documentos DGFP
+            { id: "dgfp-lactancia-parto-multiple-2017-05-16", fecha: "16/05/2017", tema: "Permiso de Lactancia en caso de Parto Múltiple", resumen: "Consulta sobre el tiempo de disfrute diario del permiso de lactancia para funcionarios en casos de parto múltiple, multiplicando el tiempo por el número de hijos. Permiso hasta los doce meses del menor. Menciona Art. 48 del Real Decreto Legislativo 5/2015 (EBEP), Art. 61 de Ley 7/2005 (Función Pública de CyL), y Art. 45 del Decreto 59/2013 (Jornada, Horario, Permisos CyL).", pagina: "1-2", etiquetas: ["permiso", "lactancia", "parto múltiple", "funcionarios", "EBEP", "Ley 7/2005", "Decreto 59/2013"], archivo_acta: "DGFP PERMISO DE LACTANCIA EN CASO DE PARTO MÚLTIPLE 16_05_2017.pdf", aplicabilidad: "Ambos", tipo_documento: "Consulta DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-aclaracion-enfermedad-grave-familiar-2017-03-27", fecha: "27/03/2017", tema: "Aclaración Permiso por Enfermedad Grave de Familiar (Días Consecutivos)", resumen: "Aclara que los permisos por enfermedad grave de familiar (Art. 77.1.b Convenio Colectivo) computados en días naturales deben disfrutarse de forma ininterrumpida.", pagina: "1", etiquetas: ["permiso", "enfermedad grave", "familiar", "días naturales", "Convenio Colectivo"], archivo_acta: "DGFP ACLARACIÓN DEL CRITERIO DERIVADO DE LA CONSULTA SOBRE EL PERMISO POR ENFERMEDAD GRAVE DE FAMILIAR 27_03_2017.pdf", aplicabilidad: "Ambos", tipo_documento: "Aclaración DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-consulta-enfermedad-grave-familiar-2017-03-15", fecha: "15/03/2017", tema: "Consulta Permiso por Enfermedad Grave de Familiar (Disfrute Flexible)", resumen: "La Dirección General de la Función Pública considera que el permiso por enfermedad grave de familiar (Art. 39.a Decreto 59/2013 y Art. 77.1.b Convenio Colectivo) podrá disfrutarse en días consecutivos o no consecutivos a instancia del solicitante, siempre que se mantenga el hecho causante. Incluye normativa aplicable.", pagina: "1-2", etiquetas: ["permiso", "enfermedad grave", "familiar", "días consecutivos", "días discontinuos", "funcionarios", "Convenio Colectivo", "Decreto 59/2013"], archivo_acta: "DGFP CONSULTA SOBRE EL PERMISO POR ENFERMEDAD GRAVE DE FAMILIAR 15_03_2017.pdf", aplicabilidad: "Ambos", tipo_documento: "Consulta DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-ausencias-enfermedad-no-IT-2017-03-15", fecha: "15/03/2017", tema: "Días de Ausencia por Enfermedad No Constitutiva de Incapacidad Temporal", resumen: "Aclara que la Orden HAC/2/2013 (Art. 3) permite 4 días anuales de ausencia por enfermedad/accidente no IT (Incapacidad Temporal), de los cuales solo tres pueden ser consecutivos. Estos días deben entenderse como días laborables.", pagina: "1-2", etiquetas: ["ausencia", "enfermedad", "incapacidad temporal", "días laborables", "retribuciones", "Orden HAC/2/2013"], archivo_acta: "DGFP ARMONIZACIÓN DE PERMISOS Y LICENCIAS  15_03_2017.pdf", aplicabilidad: "Ambos", tipo_documento: "Consulta DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-vacaciones-jubilacion-parcial-2017-05-12", fecha: "12/05/2017", tema: "Días adicionales de vacaciones y asuntos particulares por antigüedad (Jubilación Parcial)", resumen: "Criterio de la DGFP sobre el disfrute acumulado de días adicionales de vacaciones y asuntos particulares por antigüedad para personal laboral jubilado parcialmente con jornada concentrada, al ser idénticos a los días ordinarios. Menciona Art. 17.5, 58.1 y 59.6 de la Ley 7/2005.", pagina: "1-2", etiquetas: ["vacaciones", "asuntos particulares", "antigüedad", "jubilación parcial", "jornada concentrada", "personal laboral", "Ley 7/2005"], archivo_acta: "DGFP Criterio dias adicionales vacaciones asuntos particulares  jubilacion parcial acumulada 12_05_2017.pdf", aplicabilidad: "Laborales", tipo_documento: "Criterio DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-reduccion-jornada-enfermedad-muy-grave-2017-07-13", fecha: "13/07/2017", tema: "Reducción de jornada por enfermedad muy grave de familiar de primer grado (acumulación)", resumen: "Criterio de la DGFP que permite a funcionarios públicos acumular en jornadas completas la reducción de jornada por enfermedad muy grave de familiar de primer grado, siempre que se acredite el requisito. Puede denegarse por necesidades del servicio. Menciona Art. 61.e Ley 7/2005, Art. 48.i EBEP, Art. 45.e Decreto 59/2013.", pagina: "1-2", etiquetas: ["reducción jornada", "enfermedad muy grave", "familiar", "funcionarios", "conciliación", "Ley 7/2005", "EBEP", "Decreto 59/2013"], archivo_acta: "DGFP REDUCCIÓN DE JORNADA POR ENFERMEDAD MUY GRAVE DE FAMILIAR DE PRIMER 13_07_2017.pdf", aplicabilidad: "Funcionarios", tipo_documento: "Consulta DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-compatibilidad-permiso-paternidad-2017-07-13", fecha: "13/07/2017", tema: "Compatibilidad Permiso por Nacimiento/Adopción/Acogimiento y Suspensión Contrato Paternidad", resumen: "Criterio de la DGFP que establece la compatibilidad del permiso por nacimiento/adopción/acogimiento (Art. 77.1.b Convenio Colectivo) con la suspensión del contrato por paternidad (Art. 83.4 Convenio Colectivo y Art. 48.7 Estatuto de los Trabajadores), ya que esta última inicia tras la finalización del permiso.", pagina: "1-2", etiquetas: ["permiso", "nacimiento", "adopción", "paternidad", "acogimiento", "personal laboral", "Convenio Colectivo", "Estatuto de los Trabajadores"], archivo_acta: "DGFP COMPATIBILIDAD ENTRE EL PERMISO POR NACIMIENTO ADOPCIÓN O ACOGIMIENTO PERMANENTE Y LA SUSPENSION DEL CONTRATO POR PATERNIDAD PREVISTOS PARA EL PERSONAL LABORAL 13_07_2017.pdf", aplicabilidad: "Laborales", tipo_documento: "Consulta DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-plazo-vacaciones-it-maternidad-paternidad-2018-01-31", fecha: "31/01/2018", tema: "Plazo máximo para disfrutar vacaciones (IT, Maternidad, Paternidad, Riesgo Embarazo/Lactancia)", resumen: "Criterio de la DGFP sobre la posibilidad de disfrutar vacaciones fuera del año natural (hasta 18 meses después) if not se pudieron iniciar o fueron interrumpidas por IT, riesgo embarazo/lactancia, o permisos de maternidad/paternidad (incluida lactancia acumulada). Aplica Art. 50.2 EBEP y Art. 30 Decreto 59/2013.", pagina: "1-4", etiquetas: ["vacaciones", "incapacidad temporal", "paternidad", "maternidad", "riesgo embarazo", "riesgo lactancia", "lactancia acumulada", "EBEP", "Decreto 59/2013", "funcionarios"], archivo_acta: "DGFP_PLAZO_MAXIMO_VACACIONES_IT_PERMISOS_PATERNIDAD_MATERNIDAD_RIESGO_EMBARZO_LACTANCIA_2018_01_31.pdf", aplicabilidad: "Funcionarios", tipo_documento: "Consulta DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-colaboracion-tribunales-2017-07-13", fecha: "13/07/2017", tema: "Compensaciones Horarias por Colaboración en Pruebas Selectivas", resumen: "Establece compensaciones horarias (una jornada por jornada de mañana o tarde, dos por jornada completa) para empleados públicos que colaboren en pruebas selectivas en días no laborables. Deben disfrutarse en un año y están condicionadas por necesidades del servicio. Menciona Artículo 13 del Decreto 67/1999.", pagina: "1-2", etiquetas: ["compensación", "pruebas selectivas", "empleo público", "días no laborables", "formación"], archivo_acta: "DGFP Instrucción+colaboración+tribunales13_07_2017.pdf", aplicabilidad: "Ambos", tipo_documento: "Instrucción DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-complementacion-it-2018-09-04", fecha: "04/09/2018", tema: "Complementación de Prestación Económica en IT y Justificación de Ausencias por Enfermedad", resumen: "Establece criterios para complementar al 100% las retribuciones en situaciones de incapacidad temporal (IT) desde el primer día. Los cuatro días de ausencia por enfermedad sin baja médica requieren justificante facultativo. Aplica a todo el personal de la Administración General. Menciona Ley 1/2012, Decreto-Ley 1/2012, Decreto Ley 3/2018, Ley 6/2018, Orden HAC/2/2013.", pagina: "1-5", etiquetas: ["incapacidad temporal", "retribuciones", "ausencia", "enfermedad", "baja médica", "complemento"], archivo_acta: "DGFP complementación de la prestación económica en situaciones de incapacidad temporal y para la justificación de ausencias por enfermedad 04_09_2018.pdf", aplicabilidad: "Ambos", tipo_documento: "Instrucción DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+            { id: "dgfp-licencia-asuntos-propios-2017-11-07", fecha: "07/11/2017", tema: "Régimen de Disfrute de Licencia por Asuntos Propios o Sin Retribución", resumen: "Define el régimen de disfrute de licencias por asuntos propios (funcionarios) y sin retribución (laborales). Duración acumulada máxima de tres meses cada dos años y mínima de cinco días. Siempre subordinado a necesidades del servicio. Menciona Art. 62 Ley 7/2005, Art. 35 Decreto 59/2013, Art. 81 Convenio Colectivo.", pagina: "1-4", etiquetas: ["licencia", "asuntos propios", "sin retribución", "funcionarios", "personal laboral", "conciliación"], archivo_acta: "DGFP INSTRUCCIÓN licencia por asuntos propios o de la licencia sin retribución 07_11_2017.pdf", aplicabilidad: "Ambos", tipo_documento: "Instrucción DGFP", categoria_jerarquica: ['Funcionarios', 'Interpretación Autonómica', 'Dirección General de Función Pública (DGFP)'] },
+
+            // Nuevo documento de Instrucción de la Viceconsejera de Función Pública y Gobierno Abierto
+            {
+                id: "instruccion-complementacion-it-2018-09-04",
+                fecha: "04/09/2018",
+                tema: "Instrucción: Complementación IT y Justificación Ausencias por Enfermedad",
+                resumen: "Instrucción que establece criterios para la complementación al 100% de la prestación económica en situaciones de incapacidad temporal (IT) y para la justificación de ausencias por enfermedad sin baja médica. Es aplicable a todo el personal de la Administración General de la Comunidad de Castilla y León. Deroga normativas previas sobre descuentos en IT, mencionando expresamente el Decreto Ley 3/2018 y la Orden HAC/2/2013.",
+                pagina: "1-5",
+                etiquetas: ["incapacidad temporal", "IT", "ausencia", "enfermedad", "retribuciones", "complemento", "funcionarios", "personal laboral", "normativa autonómica", "instrucción", "baja médica"],
+                archivo_acta: "Instrucción+VCFPyGA+complementación+IT (1).pdf",
+                aplicabilidad: "Ambos",
+                tipo_documento: "Instrucción",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Instrucciones'],
+                articulos: [
+                    { numero: "1ª", tema: "Ámbito objetivo y subjetivo de aplicación", resumen: "Define a quién y a qué situaciones se aplica la Instrucción, excluyendo centros sanitarios del Servicio de Salud de Castilla y León." },
+                    { numero: "2ª", tema: "Régimen de complementación de la prestación económica por incapacidad temporal", resumen: "Establece el complemento retributivo para alcanzar el 100% de las retribuciones ordinarias desde el primer día de IT, tanto para contingencias comunes como profesionales." },
+                    { numero: "3ª", tema: "Cálculo de la complementación de las prestaciones económicas por incapacidad temporal", resumen: "Detalla cómo se calculan los complementos, incluyendo retribuciones fijas e invariables y el tratamiento de variables como el complemento de atención continuada y nocturnidad." },
+                    { numero: "4ª", tema: "Duración y extinción de la situación de Incapacidad Temporal", resumen: "Regula la duración y extinción de la IT según el régimen de Seguridad Social aplicable y el requisito de existencia de prestación para la complementación." },
+                    { numero: "5ª", tema: "Justificación de ausencias por enfermedad sin baja médica", resumen: "Especifica que los cuatro días de ausencia por enfermedad (Orden HAC/2/2013) requieren justificante facultativo desde el primer día." },
+                    { numero: "6ª", tema: "Aplicación de la Instrucción", resumen: "Indica que la complementación se aplica a bajas y recaídas posteriores a la entrada en vigor del Decreto Ley 3/2018." }
+                ]
+            },
+            
+            // Datos del Decreto 59/2013, de 5 de septiembre, por el que se regula la jornada, el horario, las vacaciones, los permisos y las licencias del personal funcionario
+            {
+                id: "decreto-59-2013-preambulo",
+                fecha: "05/09/2013",
+                tema: "Preámbulo del Decreto 59/2013",
+                resumen: `El régimen sobre jornada y horarios, vacaciones, licencias y permisos del personal al
+servicio de la Administración de la Comunidad de Castilla y León vigente hasta fechas
+recientes se encontraba disperso en diversas normas. Por un lado, las previsiones
+contenidas en el Capítulo IV del Título IV de la Ley 7/2005, de 24 de mayo, de la Función
+Pública de Castilla y León; por otro, diversas
+`,
+                pagina: "1-2", // Suponiendo que el preámbulo abarca las primeras páginas
+                etiquetas: ["decreto", "jornada", "horario", "vacaciones", "permisos", "licencias", "función pública"],
+                archivo_acta: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+                aplicabilidad: "Funcionarios",
+                tipo_documento: "Decreto",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Decretos']
+            },
+            // Título Preliminar
+            {
+                id: "decreto-59-2013-titulo-preliminar-capitulo-unico",
+                fecha: "05/09/2013",
+                tema: "Título Preliminar. Disposiciones Generales (Decreto 59/2013)",
+                resumen: "Este título establece el objeto y el ámbito de aplicación del Decreto 59/2013, definiendo a quién se aplica esta normativa sobre jornada, horarios, vacaciones y permisos en la Administración de Castilla y León.",
+                pagina: "3-4",
+                etiquetas: ["decreto", "ámbito de aplicación", "disposiciones generales"],
+                archivo_acta: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+                aplicabilidad: "Funcionarios",
+                tipo_documento: "Decreto",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Decretos'],
+                articulos: [
+                    {
+                        numero: "1",
+                        tema: "Objeto del Decreto",
+                        resumen: "Define el propósito de la norma: regular la jornada, el horario, las vacaciones, los permisos y las licencias del personal funcionario al servicio de la Administración de la Comunidad de Castilla y León."
+                    },
+                    {
+                        numero: "2",
+                        tema: "Ámbito subjetivo de aplicación",
+                        resumen: "Especifica a qué personal se aplica el decreto, incluyendo al personal funcionario y excluyendo a determinados colectivos con normativa específica."
+                    }
+                ]
+            },
+            // Título I
+            {
+                id: "decreto-59-2013-titulo-i-capitulo-i",
+                fecha: "05/09/2013",
+                tema: "Título I. Jornada y Horario de Trabajo. Capítulo I. Disposiciones generales sobre jornada de trabajo (Decreto 59/2013)",
+                resumen: "Establece las bases de la jornada de trabajo, incluyendo la jornada máxima anual, las jornadas especiales y la jornada reducida, así como su distribución y compensaciones.",
+                pagina: "4-6",
+                etiquetas: ["decreto", "jornada", "horario", "jornada máxima", "jornada reducida"],
+                archivo_acta: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+                aplicabilidad: "Funcionarios",
+                tipo_documento: "Decreto",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Decretos'],
+                articulos: [
+                    {
+                        numero: "3",
+                        tema: "Jornada máxima anual ordinaria",
+                        resumen: "Define la jornada máxima anual de trabajo ordinario y su cómputo."
+                    },
+                    {
+                        numero: "4",
+                        tema: "Jornada de dedicación especial y jornadas especiales",
+                        resumen: "Regula las jornadas con dedicación especial y otras jornadas específicas."
+                    },
+                    {
+                        numero: "5",
+                        tema: "Jornada reducida por interés particular",
+                        resumen: "Establece la posibilidad de reducir la jornada de trabajo por motivos de interés particular."
+                    },
+                    {
+                        numero: "6",
+                        tema: "Distribución regular de la jornada",
+                        resumen: "Detalla cómo se distribuye la jornada de trabajo de forma regular."
+                    },
+                    {
+                        numero: "7",
+                        tema: "Distribución irregular de la jornada",
+                        resumen: "Permite la distribución irregular de la jornada bajo ciertas condiciones."
+                    },
+                    {
+                        numero: "8",
+                        tema: "Compensación horaria",
+                        resumen: "Normas para la compensación de horas trabajadas fuera de la jornada habitual."
+                    }
+                ]
+            },
+            {
+                id: "decreto-59-2013-titulo-i-capitulo-ii",
+                fecha: "05/09/2013",
+                tema: "Título I. Jornada y Horario de Trabajo. Capítulo II. Calendario laboral (Decreto 59/2013)",
+                resumen: "Regula la elaboración, aprobación y publicación del calendario laboral, incluyendo las compensaciones por días festivos.",
+                pagina: "6-7",
+                etiquetas: ["decreto", "jornada", "horario", "calendario laboral", "días festivos"],
+                archivo_acta: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+                aplicabilidad: "Funcionarios",
+                tipo_documento: "Decreto",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Decretos'],
+                articulos: [
+                    {
+                        numero: "9",
+                        tema: "Calendario laboral",
+                        resumen: "Disposiciones generales sobre el calendario laboral anual."
+                    },
+                    {
+                        numero: "10",
+                        tema: "Órganos competentes",
+                        resumen: "Define los órganos responsables de la aprobación del calendario laboral."
+                    },
+                    {
+                        numero: "11",
+                        tema: "Vigencia",
+                        resumen: "Establece la validez temporal del calendario laboral."
+                    },
+                    {
+                        numero: "12",
+                        tema: "Compensaciones de jornada (días 24 y 31 dic)",
+                        resumen: "Regula la compensación de la jornada para los días 24 y 31 de diciembre."
+                    }
+                ]
+            },
+            {
+                id: "decreto-59-2013-titulo-i-capitulo-iii",
+                fecha: "05/09/2013",
+                tema: "Título I. Jornada y Horario de Trabajo. Capítulo III. Horario de trabajo (Decreto 59/2013)",
+                resumen: "Detalla el horario general, las adaptaciones por conciliación y violencia de género, y los horarios especiales para ciertos puestos.",
+                pagina: "7-9",
+                etiquetas: ["decreto", "horario", "conciliación", "violencia de género", "horarios especiales"],
+                archivo_acta: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+                aplicabilidad: "Funcionarios",
+                tipo_documento: "Decreto",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Decretos'],
+                articulos: [
+                    {
+                        numero: "13",
+                        tema: "Horario general en las dependencias administrativas",
+                        resumen: "Establece el horario de obligada permanencia en el puesto de trabajo."
+                    },
+                    {
+                        numero: "14",
+                        tema: "Adaptación del horario por razones de conciliación",
+                        resumen: "Regula la flexibilidad horaria por motivos de conciliación familiar."
+                    },
+                    {
+                        numero: "15",
+                        tema: "Adaptación del horario por razón de violencia de género",
+                        resumen: "Disposiciones para la adaptación del horario de víctimas de violencia de género."
+                    },
+                    {
+                        numero: "16",
+                        tema: "Horarios especiales",
+                        resumen: "Define los horarios específicos para determinados puestos o servicios."
+                    }
+                ]
+            },
+            {
+                id: "decreto-59-2013-titulo-i-capitulo-iv",
+                fecha: "05/09/2013",
+                tema: "Título I. Jornada y Horario de Trabajo. Capítulo IV. Otros tiempos de trabajo (Decreto 59/2013)",
+                resumen: "Aborda el concepto de trabajo efectivo, las pausas y el tiempo dedicado a la formación dentro de la jornada laboral.",
+                pagina: "10-11",
+                etiquetas: ["decreto", "jornada", "horario", "trabajo efectivo", "pausas", "formación"],
+                archivo_acta: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+                aplicabilidad: "Funcionarios",
+                tipo_documento: "Decreto",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Decretos'],
+                articulos: [
+                    {
+                        numero: "17",
+                        tema: "Trabajo efectivo",
+                        resumen: "Aclara qué se considera tiempo de trabajo efectivo."
+                    },
+                    {
+                        numero: "18",
+                        tema: "Pausa (tiempo de descanso)",
+                        resumen: "Regula las pausas durante la jornada de trabajo."
+                    },
+                    {
+                        numero: "19",
+                        tema: "Tiempo para la formación",
+                        resumen: "Establece el tiempo dedicado a la formación profesional."
+                    }
+                ]
+            },
+            {
+                id: "decreto-59-2013-titulo-i-capitulo-v",
+                fecha: "05/09/2013",
+                tema: "Título I. Jornada y Horario de Trabajo. Capítulo V. Control horario (Decreto 59/2013)",
+                resumen: "Define el objeto del control horario, los responsables de su aplicación y los medios utilizados para su registro y justificación de ausencias.",
+                pagina: "11-12",
+                etiquetas: ["decreto", "control horario", "registro", "ausencias"],
+                archivo_acta: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
+                aplicabilidad: "Funcionarios",
+                tipo_documento: "Decreto",
+                categoria_jerarquica: ['Funcionarios', 'Normativa Autonómica', 'General', 'Decretos'],
+                articulos: [
+                    {
+                        numero: "20",
+                        tema: "Objeto del Decreto",
+                        resumen: "Define la finalidad del sistema de control horario."
+                    },
+                    {
+                        numero: "21",
+                        tema: "Responsables del control horario",
+                        resumen: "Establece quiénes son los encargados de supervisar el control horario."
+                    },
+                    {
+                        numero: "22",
+                        tema: "Medios de control horario",
+                        resumen: "Describe los sistemas o herramientas para registrar la jornada."
+                    },
+                    {
+                        numero: "23",
+                        tema: "Justificación de ausencias",
+                        resumen: "Regula la forma y los requisitos para justificar las ausencias al trabajo."
+                    }
+                ]
+            }
+        ];
+
+        const resultsContainer = document.getElementById('results-by-year-container'); // Changed to this container
+        const searchInput = document.getElementById('searchInput');
+        const dateFilter = document.getElementById('dateFilter');
+        const documentTypeFilter = document.getElementById('documentTypeFilter');
+        const sortOrder = document.getElementById('sortOrder');
+        const tagPillsContainer = document.getElementById('tagPillsContainer');
+        const clearTagsButton = document.getElementById('clearTagsButton');
+        const resultsCountSpan = document.getElementById('resultsCount');
+        const quickDefinitionBox = document.getElementById('quickDefinitionBox');
+        const quickDefinitionTerm = document.getElementById('quickDefinitionTerm');
+        const quickDefinitionContent = document.getElementById('quickDefinitionContent');
+        const highlightWarning = document.getElementById('highlightWarning');
+        const highlightKeywordInWarning = document.getElementById('highlightKeywordInWarning');
+        const viewDocumentByTagButton = document.getElementById('viewDocumentByTagButton');
+
+        let selectedTags = new Set();
+        let selectedDocumentTypes = new Set();
+        let selectedApplicabilidadFilter = 'todos'; // Default filter
+
+        const documentTypeMap = new Map();
+        const applicabilidadMap = {
+            'Laborales': {
+                'Normativa Estatal': {},
+                'Normativa Autonómica': {},
+                'Interpretación Autonómica': {},
+                'Sentencias': {}
+            },
+            'Funcionarios': {
+                'Normativa Estatal': {},
+                'Normativa Autonómica': {},
+                'Interpretación Autonómica': {},
+                'Sentencias': {}
+            }
+        };
+
+        function initializeApp() {
+            populateFilters();
+            populateDocumentSelection();
+            setupEventListeners();
+            filterAndRender();
+        }
+
+        function populateFilters() {
+            const uniqueDates = [...new Set(data.map(item => item.fecha))].sort((a, b) => {
+                const [dayA, monthA, yearA] = a.split('/').map(Number);
+                const [dayB, monthB, yearB] = b.split('/').map(Number);
+                const dateA = new Date(yearA, monthA - 1, dayA);
+                const dateB = new Date(yearB, monthB - 1, dayB);
+                return dateB - dateA;
+            });
+            uniqueDates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = date;
+                dateFilter.appendChild(option);
+            });
+
+            const allUniqueTags = [...new Set(data.flatMap(item => item.etiquetas))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+            tagPillsContainer.innerHTML = '';
+            allUniqueTags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag-pill';
+                tagEl.textContent = tag;
+                tagEl.dataset.tag = tag;
+                tagEl.addEventListener('click', () => {
+                    if (selectedTags.has(tag)) {
+                        selectedTags.delete(tag);
+                        tagEl.classList.remove('selected');
+                    } else {
+                        selectedTags.add(tag);
+                        tagEl.classList.add('selected');
+                    }
+                    filterAndRender();
+                });
+                tagPillsContainer.appendChild(tagEl);
+            });
+
+            const uniqueDocumentTypes = [...new Set(data.map(item => item.tipo_documento))].sort();
+            uniqueDocumentTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                documentTypeFilter.appendChild(option);
+            });
+
+            // Populate search suggestions datalist
+            const searchSuggestionsDatalist = document.getElementById('searchSuggestions');
+            const uniqueSearchTerms = new Set();
+            data.forEach(item => {
+                uniqueSearchTerms.add(item.tema);
+                item.etiquetas.forEach(tag => uniqueSearchTerms.add(tag));
+                if (item.articulos) {
+                    item.articulos.forEach(art => uniqueSearchTerms.add(art.tema));
+                }
+                // Add terms from quickDefinitionMap
+                for (const term in quickDefinitionMap) {
+                    uniqueSearchTerms.add(term);
+                }
+            });
+            // Also add common words from summaries if desired, but keep it concise for suggestions
+            
+            // Clear existing options
+            searchSuggestionsDatalist.innerHTML = '';
+            Array.from(uniqueSearchTerms).sort().forEach(term => {
+                const option = document.createElement('option');
+                option.value = term;
+                searchSuggestionsDatalist.appendChild(option);
+            });
+        }
+
+        function buildDocumentCategoryTree(categories, parentElement, isNested = false) {
+            const ul = document.createElement('ul');
+            ul.className = `category-list ${isNested ? 'nested-indent' : ''}`; // Add nested-indent for all sub-levels
+
+            for (const categoryName in categories) {
+                const categoryItem = document.createElement('li');
+                categoryItem.className = 'category-item';
+
+                const categoryLabel = document.createElement('label');
+                categoryLabel.className = 'category-label text-sm'; // Ensure text-sm for labels
+                const categoryCheckbox = document.createElement('input');
+                categoryCheckbox.type = 'checkbox';
+                categoryCheckbox.dataset.categoryName = categoryName; // Store category name for easy access
+
+                categoryLabel.appendChild(categoryCheckbox);
+                categoryLabel.appendChild(document.createTextNode(categoryName));
+                categoryItem.appendChild(categoryLabel);
+
+                ul.appendChild(categoryItem);
+
+                const subCategoriesOrDocuments = categories[categoryName];
+
+                if (Object.keys(subCategoriesOrDocuments).length > 0) {
+                    // Check if all values are strings (documents) or objects (sub-categories)
+                    const isDocuments = Object.values(subCategoriesOrDocuments).every(value => typeof value === 'string');
+
+                    if (isDocuments) {
+                        // This is a list of documents
+                        const docUl = document.createElement('ul');
+                        docUl.className = 'nested-indent'; // Indent documents
+                        for (const docFileName in subCategoriesOrDocuments) {
+                            const docItem = document.createElement('li');
+                            docItem.className = 'document-item text-sm'; // Ensure text-sm for document items
+                            const docLabel = document.createElement('label');
+                            const docCheckbox = document.createElement('input');
+                            docCheckbox.type = 'checkbox';
+                            docCheckbox.value = docFileName; // Use filename as value
+                            docCheckbox.dataset.displayName = subCategoriesOrDocuments[docFileName]; // Store display name
+                            docCheckbox.dataset.categoryName = categoryName; // Store category for filtering
+
+                            docLabel.appendChild(docCheckbox);
+                            docLabel.appendChild(document.createTextNode(subCategoriesOrDocuments[docFileName]));
+                            docItem.appendChild(docLabel);
+                            docUl.appendChild(docItem);
+
+                            // Store a reference to the checkbox for later updates
+                            documentTypeMap.set(docFileName, docCheckbox);
+                        }
+                        categoryItem.appendChild(docUl);
+                    } else {
+                        // This is a list of sub-categories (recursive call)
+                        categoryItem.appendChild(buildDocumentCategoryTree(subCategoriesOrDocuments, ul, true));
+                    }
+                }
+            }
+            return ul;
+        }
+
+        function populateDocumentSelection() {
+            const laboralesContainer = document.getElementById('laboralesDocumentSelection');
+            const funcionariosContainer = document.getElementById('funcionariosDocumentSelection');
+
+            laboralesContainer.innerHTML = '';
+            funcionariosContainer.innerHTML = '';
+
+            // Build and append the hierarchical checkbox lists
+            laboralesContainer.appendChild(buildDocumentCategoryTree(documentCategories['Laborales'], laboralesContainer));
+            funcionariosContainer.appendChild(buildDocumentCategoryTree(documentCategories['Funcionarios'], funcionariosContainer));
+
+            // Update counts
+            updateDocumentSelectionCounts();
+        }
+
+        function setCheckboxesState(containerId, shouldSelect) {
+            const container = document.getElementById(containerId);
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                // Only change state if the checkbox is visible
+                if (cb.closest('li').style.display !== 'none') {
+                    cb.checked = shouldSelect;
+                }
+            });
+            updateDocumentSelectionCounts();
+            filterAndRender();
+        }
+        
+        function setupEventListeners() {
+            searchInput.addEventListener('input', filterAndRender);
+            dateFilter.addEventListener('change', filterAndRender);
+            documentTypeFilter.addEventListener('change', filterAndRender);
+            sortOrder.addEventListener('change', filterAndRender);
+            
+            clearTagsButton.addEventListener('click', () => {
+                selectedTags.clear();
+                document.querySelectorAll('.tag-pill').forEach(pill => pill.classList.remove('selected'));
+                filterAndRender();
+            });
+
+            document.querySelectorAll('input[name="aplicabilidadFilter"]').forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    selectedApplicabilidadFilter = event.target.value;
+                    filterAndRender();
+                    updateDocumentSelectionCheckboxes();
+                });
+            });
+
+            document.getElementById('laboralesDocumentSelection').addEventListener('change', handleDocumentCheckboxChange);
+            document.getElementById('funcionariosDocumentSelection').addEventListener('change', handleDocumentCheckboxChange);
+
+            document.getElementById('selectAllLaborales').addEventListener('click', () => setCheckboxesState('laboralesDocumentSelection', true));
+            document.getElementById('deselectAllLaborales').addEventListener('click', () => setCheckboxesState('laboralesDocumentSelection', false));
+            document.getElementById('selectAllFuncionarios').addEventListener('click', () => setCheckboxesState('funcionariosDocumentSelection', true));
+            document.getElementById('deselectAllFuncionarios').addEventListener('click', () => setCheckboxesState('funcionariosDocumentSelection', false));
+           
+            viewDocumentByTagButton.addEventListener('click', () => {
+                if (selectedTags.size !== 1) {
+                    if (selectedTags.size === 0) {
+                        // Using a simple message box instead of alert()
+                        const msgBox = document.createElement('div');
+                        msgBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+                        msgBox.innerHTML = `
+                            <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                                <p class="text-gray-800 mb-4">Por favor, selecciona una etiqueta para ver su documento asociado.</p>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="this.closest('.fixed').remove()">Aceptar</button>
+                            </div>
+                        `;
+                        document.body.appendChild(msgBox);
+                    } else {
+                        // Using a simple message box instead of alert()
+                        const msgBox = document.createElement('div');
+                        msgBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+                        msgBox.innerHTML = `
+                            <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                                <p class="text-gray-800 mb-4">Por favor, selecciona solo UNA etiqueta para usar esta función. Actualmente hay varias seleccionadas.</p>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="this.closest('.fixed').remove()">Aceptar</button>
+                            </div>
+                        `;
+                        document.body.appendChild(msgBox);
+                    }
+                    return;
+                }
+
+                const selectedTag = Array.from(selectedTags)[0];
+                const matchingItems = data.filter(item => item.etiquetas.includes(selectedTag));
+
+                if (matchingItems.length === 1) {
+                    const item = matchingItems[0];
+                    const keyword = selectedTag;
+                    
+                    highlightKeywordInWarning.textContent = keyword;
+                    highlightWarning.classList.remove('hidden');
+
+                    const pageNumber = item.pagina.split('-')[0];
+                    let url = `${item.archivo_acta}#page=${pageNumber}&zoom=100&view=FitH&pagemode=bookmarks&search="${encodeURIComponent(keyword)}"`;
+                    
+                    window.open(url, '_blank');
+
+                } else if (matchingItems.length > 1) {
+                    // Using a simple message box instead of alert()
+                    const msgBox = document.createElement('div');
+                    msgBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+                    msgBox.innerHTML = `
+                        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                            <p class="text-gray-800 mb-4">La etiqueta "${selectedTag}" está asociada a varios documentos. Por favor, utiliza los filtros para refinar tu búsqueda o selecciona una etiqueta más específica.</p>
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="this.closest('.fixed').remove()">Aceptar</button>
+                        </div>
+                    `;
+                    document.body.appendChild(msgBox);
+                } else {
+                    // Using a simple message box instead of alert()
+                    const msgBox = document.createElement('div');
+                    msgBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+                    msgBox.innerHTML = `
+                        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                            <p class="text-gray-800 mb-4">Error: No se encontró un documento para la etiqueta seleccionada.</p>
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="this.closest('.fixed').remove()">Aceptar</button>
+                        </div>
+                    `;
+                    document.body.appendChild(msgBox);
+                }
+            });
+
+            // Quick Definition Box event listeners
+            document.addEventListener('mouseover', (event) => {
+                const target = event.target;
+                const textContent = target.textContent.trim().toLowerCase();
+                const definition = quickDefinitionMap[textContent];
+                
+                if (definition) {
+                    quickDefinitionTerm.textContent = target.textContent.trim();
+                    quickDefinitionContent.textContent = definition;
+                    quickDefinitionBox.style.display = 'block';
+                    // Position the box near the mouse or target element
+                    const rect = event.target.getBoundingClientRect();
+                    quickDefinitionBox.style.left = `${rect.left + window.scrollX}px`;
+                    quickDefinitionBox.style.top = `${rect.bottom + window.scrollY + 5}px`; // 5px below the tag
+                }
+            });
+
+            document.addEventListener('mouseout', (event) => {
+                // Check if the mouse is still over the quickDefinitionBox itself
+                if (!quickDefinitionBox.contains(event.relatedTarget)) {
+                    quickDefinitionBox.style.display = 'none';
+                }
+            });
+            
+            updateDocumentSelectionCheckboxes();
+        }
+
+        function handleDocumentCheckboxChange(event) {
+            const checkbox = event.target;
+            if (checkbox.type === 'checkbox') {
+                const isChecked = checkbox.checked;
+                const childList = checkbox.closest('li').querySelector('ul');
+
+                if(childList) {
+                    const nestedCheckboxes = childList.querySelectorAll('input[type="checkbox"]');
+                    nestedCheckboxes.forEach(nestedCb => {
+                        nestedCb.checked = isChecked;
+                    });
+                }
+                
+                updateDocumentSelectionCounts();
+                filterAndRender(); 
+            }
+        }
+
+        function updateDocumentSelectionCheckboxes() {
+            document.querySelectorAll('#laboralesDocumentSelection li, #funcionariosDocumentSelection li').forEach(li => li.style.display = '');
+
+            const allCheckboxes = document.querySelectorAll('#laboralesDocumentSelection input[type="checkbox"][value], #funcionariosDocumentSelection input[type="checkbox"][value]');
+            
+            allCheckboxes.forEach(cb => {
+                const item = data.find(d => d.archivo_acta === cb.value);
+                let shouldBeVisible = false;
+
+                if (item) {
+                    switch (selectedApplicabilidadFilter) {
+                        case 'todos':
+                            shouldBeVisible = true;
+                            break;
+                        case 'laborales':
+                            shouldBeVisible = (item.aplicabilidad === 'Laborales' || item.aplicabilidad === 'Ambos');
+                            break;
+                        case 'funcionarios':
+                            shouldBeVisible = (item.aplicabilidad === 'Funcionarios' || item.aplicabilidad === 'Ambos');
+                            break;
+                        case 'ambos':
+                            shouldBeVisible = item.aplicabilidad === 'Ambos';
+                            break;
+                    }
+                }
+                
+                const listItem = cb.closest('li');
+                if (listItem) {
+                    listItem.style.display = shouldBeVisible ? '' : 'none';
+                    if (!shouldBeVisible) {
+                        cb.checked = false; // Deseleccionar si se oculta
+                    }
+                }
+            });
+
+            // Ocultar categorías si todos sus hijos están ocultos
+            document.querySelectorAll('.category-list').forEach(ul => {
+                const parentLi = ul.closest('li.category-item');
+                if (parentLi) {
+                    const visibleItems = Array.from(ul.children).filter(childLi => childLi.style.display !== 'none');
+                    if (visibleItems.length === 0) {
+                        parentLi.style.display = 'none';
+                    } else {
+                        parentLi.style.display = '';
+                    }
+                }
+            });
+
+
+            updateDocumentSelectionCounts();
+        }
+
+        function updateDocumentSelectionCounts() {
+            const allLaboralesCheckboxes = Array.from(document.querySelectorAll('#laboralesDocumentSelection input[type="checkbox"][data-displayName]')).filter(cb => cb.closest('li').style.display !== 'none');
+            const selectedLaboralesCheckboxes = allLaboralesCheckboxes.filter(cb => cb.checked);
+            document.getElementById('laboralesDocCount').textContent = `(${selectedLaboralesCheckboxes.length}/${allLaboralesCheckboxes.length} seleccionados)`;
+
+            const allFuncionariosCheckboxes = Array.from(document.querySelectorAll('#funcionariosDocumentSelection input[type="checkbox"][data-displayName]')).filter(cb => cb.closest('li').style.display !== 'none');
+            const selectedFuncionariosCheckboxes = allFuncionariosCheckboxes.filter(cb => cb.checked);
+            document.getElementById('funcionariosDocCount').textContent = `(${selectedFuncionariosCheckboxes.length}/${allFuncionariosCheckboxes.length} seleccionados)`;
+        }
+
+        function filterAndRender() {
+            const searchTerm = searchInput.value; // Keep original case for PDF search
+            const displaySearchTerm = searchTerm.toLowerCase(); // For internal matching
+            const selectedDate = dateFilter.value;
+            const selectedDocumentType = documentTypeFilter.value;
+            const currentSortOrder = sortOrder.value;
+
+            const selectedDocumentFileNames = new Set();
+            document.querySelectorAll('#laboralesDocumentSelection input[type="checkbox"][data-displayName]:checked, #funcionariosDocumentSelection input[type="checkbox"][data-displayName]:checked').forEach(cb => {
+                selectedDocumentFileNames.add(cb.value);
+            });
+
+            const filteredData = data.filter(item => {
+                const documentSelectionMatch = selectedDocumentFileNames.size === 0 || selectedDocumentFileNames.has(item.archivo_acta);
+
+                const applicabilityMatch = selectedApplicabilidadFilter === 'todos' ||
+                                           (selectedApplicabilidadFilter === 'laborales' && (item.aplicabilidad === 'Laborales' || item.aplicabilidad === 'Ambos')) ||
+                                           (selectedApplicabilidadFilter === 'funcionarios' && (item.aplicabilidad === 'Funcionarios' || item.aplicabilidad === 'Ambos')) ||
+                                           (selectedApplicabilidadFilter === 'ambos' && item.aplicabilidad === 'Ambos');
+
+
+                // Refined search matching for exact phrases
+                let currentDisplaySearchTerm = displaySearchTerm;
+                let isExactSearch = false;
+                if (displaySearchTerm.startsWith('"') && displaySearchTerm.endsWith('"') && displaySearchTerm.length > 1) {
+                    currentDisplaySearchTerm = displaySearchTerm.substring(1, displaySearchTerm.length - 1);
+                    isExactSearch = true;
+                }
+
+                const checkMatch = (text) => {
+                    if (isExactSearch) {
+                        return text.includes(currentDisplaySearchTerm);
+                    } else {
+                        return text.includes(currentDisplaySearchTerm);
+                    }
+                };
+
+                const searchMatch = currentDisplaySearchTerm === '' ||
+                                    checkMatch(item.tema.toLowerCase()) ||
+                                    checkMatch(item.resumen.toLowerCase()) ||
+                                    (item.articulos && item.articulos.some(art => checkMatch(art.tema.toLowerCase()) || checkMatch(art.resumen.toLowerCase()))) ||
+                                    item.etiquetas.some(t => checkMatch(t.toLowerCase()));
+
+                const dateMatch = selectedDate === 'all' || item.fecha === selectedDate;
+
+                const typeMatch = selectedDocumentType === 'all' || item.tipo_documento === selectedDocumentType;
+
+                const tagMatch = selectedTags.size === 0 || item.etiquetas.some(tag => selectedTags.has(tag));
+
+                return searchMatch && dateMatch && typeMatch && tagMatch && documentSelectionMatch && applicabilityMatch;
+            });
+
+            filteredData.sort((a, b) => {
+                if (currentSortOrder === 'date-desc') {
+                    const [dayA, monthA, yearA] = a.fecha.split('/').map(Number);
+                    const [dayB, monthB, yearB] = b.fecha.split('/').map(Number);
+                    return new Date(yearB, monthB - 1, dayB) - new Date(yearA, monthA - 1, dayA);
+                } else if (currentSortOrder === 'date-asc') {
+                     const [dayA, monthA, yearA] = a.fecha.split('/').map(Number);
+                    const [dayB, monthB, yearB] = b.fecha.split('/').map(Number);
+                    return new Date(yearA, monthA - 1, dayA) - new Date(yearB, monthB - 1, dayB);
+                } else if (currentSortOrder === 'topic-asc') {
+                    return a.tema.localeCompare(b.tema);
+                }
+                return 0;
+            });
+
+            // Show/hide highlight warning based on search term presence and results
+            if (searchTerm.trim() !== '' && filteredData.length > 0) {
+                highlightKeywordInWarning.textContent = searchTerm.replace(/"/g, ''); // Remove quotes for display in warning
+                highlightWarning.classList.remove('hidden');
+            } else {
+                highlightWarning.classList.add('hidden');
+            }
+
+
+            renderResults(filteredData, displaySearchTerm); // Pass displaySearchTerm for HTML highlighting
+            updateResultsCount(filteredData.length, data.length);
+        }
+
+        function renderResults(items, displaySearchTerm) {
+            resultsContainer.innerHTML = '';
+            if (items.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-gray-500 col-span-full text-center p-4">No se encontraron resultados que coincidan con su búsqueda.</p>';
+                return;
+            }
+
+            const itemsByYear = items.reduce((acc, item) => {
+                const year = item.fecha.split('/')[2];
+                if (!acc[year]) acc[year] = [];
+                acc[year].push(item);
+                return acc;
+            }, {});
+
+            const sortedYears = Object.keys(itemsByYear).sort((a, b) => b - a);
+
+            const globalSearchTerm = searchInput.value; // Get the raw search term for PDF linking
+
+            sortedYears.forEach(year => {
+                const yearSection = document.createElement('div');
+                yearSection.className = 'mb-8';
+
+                const yearTitle = document.createElement('h2');
+                yearTitle.className = 'text-3xl font-bold text-slate-700 mb-6 border-b-2 border-slate-300 pb-2';
+                yearTitle.textContent = `Año ${year}`;
+                yearSection.appendChild(yearTitle);
+
+                const yearGrid = document.createElement('div');
+                yearGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+
+                itemsByYear[year].forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 transition-transform transform hover:scale-105 relative flex flex-col';
+
+                    // Construct base URL for PDF with search term if available
+                    const basePdfUrl = item.archivo_acta;
+                    const pageNumber = item.pagina.split('-')[0];
+                    let pdfLinkWithSearch = `${basePdfUrl}#page=${pageNumber}`;
+                    if (globalSearchTerm.trim() !== '') {
+                        pdfLinkWithSearch += `&search="${encodeURIComponent(globalSearchTerm)}"`;
+                    }
+                    pdfLinkWithSearch += `&zoom=100&view=FitH&pagemode=bookmarks`; // Add standard PDF viewer parameters
+
+
+                    // Prepare articles HTML
+                    let articlesHtml = '';
+                    if (item.articulos && item.articulos.length > 0) {
+                        articlesHtml = `
+                            <div class="mt-4 text-sm">
+                                <h4 class="font-semibold text-gray-700 mb-2">Artículos relevantes:</h4>
+                                <ul class="list-disc list-inside text-gray-600">
+                                    ${item.articulos.map(article => {
+                                        const mappedArticle = documentArticleMap[item.archivo_acta] && documentArticleMap[item.archivo_acta][article.numero];
+                                        const articlePage = mappedArticle ? mappedArticle.page : item.pagina.split('-')[0];
+                                        const articleLinkClass = mappedArticle ? 'article-link-icon' : 'article-link-icon unmapped';
+                                        const articleLinkTitle = mappedArticle ? `Ir al Artículo ${article.numero}` : `Artículo ${article.numero} (página no mapeada)`;
+                                        
+                                        // Prioritize global search term for article links if present
+                                        let articlePdfLink = `${basePdfUrl}#page=${articlePage}`;
+                                        if (globalSearchTerm.trim() !== '') {
+                                            articlePdfLink += `&search="${encodeURIComponent(globalSearchTerm)}"`;
+                                        } else if (article.tema.trim() !== '') { // Fallback to article tema if no global search
+                                            articlePdfLink += `&search="${encodeURIComponent(article.tema)}"`;
+                                        }
+                                        articlePdfLink += `&zoom=100&view=FitH&pagemode=bookmarks`; // Add standard PDF viewer parameters
+
+                                        return `
+                                            <li class="mb-1">
+                                                <a href="${articlePdfLink}" target="_blank" class="${articleLinkClass}" title="${articleLinkTitle}">
+                                                    <strong>${highlightSearchTerm(article.numero, displaySearchTerm)}:</strong> ${highlightSearchTerm(article.tema, displaySearchTerm)}
+                                                </a>
+                                                <span class="text-gray-500 italic ml-2">(${highlightSearchTerm(article.resumen, displaySearchTerm)})</span>
+                                            </li>
+                                        `;
+                                    }).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+
+                    let contentHtml = `
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">${highlightSearchTerm(item.tema, displaySearchTerm)}</h3>
+                            <p class="text-gray-600 mb-4 text-sm">${highlightSearchTerm(item.resumen, displaySearchTerm)}</p>
+                            <span class="absolute top-4 right-4 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${item.tipo_documento}</span>
+                            <span class="absolute top-10 right-4 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mt-1">${item.aplicabilidad}</span>
+                            ${articlesHtml} <!-- Insert articles HTML here -->
+                        </div>
+                        <div class="mt-auto">
+                            <div class="flex justify-between items-center text-xs text-gray-500 mb-4 mt-6">
+                                <span><strong>Fecha:</strong> ${item.fecha}</span>
+                                <a href="${pdfLinkWithSearch}" target="_blank" class="text-blue-600 hover:underline"><strong>Página: ${item.pagina}</strong></a>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                ${item.etiquetas.map(tag => `<span class="tag-pill text-xs px-2 py-0.5" onmouseover="showDefinition(event, '${tag}')" onmouseout="hideDefinition()">${tag}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    card.innerHTML = contentHtml;
+                    yearGrid.appendChild(card);
+                });
+                yearSection.appendChild(yearGrid);
+                resultsContainer.appendChild(yearSection);
+            });
+        }
+
+        function updateResultsCount(current, total) {
+            resultsCountSpan.textContent = `Mostrando ${current} de ${total} resultados.`;
+        }
+
+        function getDocDisplayName(fileName) {
+            for (const cat1 in documentCategories) {
+                for (const cat2 in documentCategories[cat1]) {
+                    for (const cat3 in documentCategories[cat1][cat2]) {
+                         for (const cat4 in documentCategories[cat1][cat2][cat3]){
+                            if (documentCategories[cat1][cat2][cat3][cat4][fileName]) {
+                                return documentCategories[cat1][cat2][cat3][cat4][fileName];
+                            }
+                         }
+                    }
+                }
+            }
+            return fileName;
+        }
+
+        function highlightSearchTerm(text, searchTerm) {
+            if (!searchTerm) return text;
+            // Remove quotes for highlighting if it's an exact search
+            let actualSearchTerm = searchTerm;
+            if (searchTerm.startsWith('"') && searchTerm.endsWith('"') && searchTerm.length > 1) {
+                actualSearchTerm = searchTerm.substring(1, searchTerm.length - 1);
+            }
+            if (!actualSearchTerm) return text; // If after removing quotes, it's empty, return original text
+
+            const regex = new RegExp(`(${actualSearchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<span class="highlight-term">$1</span>');
+        }
+
+        // Functions for quick definition box
+        function showDefinition(event, term) {
+            const definition = quickDefinitionMap[term.toLowerCase()];
+            if (definition) {
+                quickDefinitionTerm.textContent = term;
+                quickDefinitionContent.textContent = definition;
+                quickDefinitionBox.style.display = 'block';
+                // Position relative to the hovered element or mouse
+                const rect = event.target.getBoundingClientRect();
+                quickDefinitionBox.style.left = `${rect.left + window.scrollX}px`;
+                quickDefinitionBox.style.top = `${rect.bottom + window.scrollY + 5}px`; // 5px below the tag
+            }
+        }
+
+        function hideDefinition() {
+            quickDefinitionBox.style.display = 'none';
+        }
+
+        initializeApp();
+    </script>
+</body>
+</html>
