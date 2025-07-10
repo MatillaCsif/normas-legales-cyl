@@ -7,11 +7,15 @@
   <style>
     body { font-family: sans-serif; margin: 0; background: #f0f2f5; }
     header { background: #1f2937; color: white; padding: 1em; text-align: center; }
-    .buscador, .resultados { max-width: 900px; margin: auto; padding: 1em; }
-    .buscador input, .buscador select { padding: 0.5em; margin-right: 0.5em; }
+    .contenedor { display: flex; max-width: 1200px; margin: auto; }
+    .principal { flex: 3; padding: 1em; }
+    .lateral { flex: 1; padding: 1em; background: #fff; border-left: 1px solid #ddd; }
+    .buscador input, .buscador select { padding: 0.5em; margin-right: 0.5em; margin-bottom: 0.5em; width: 100%; }
+    .buscador button { padding: 0.5em; width: 100%; }
     .tarjeta { background: white; border-left: 5px solid #3b82f6; margin: 1em 0; padding: 1em; border-radius: 6px; }
     .etiquetas span { background: #dbeafe; padding: 4px 8px; margin: 3px; display: inline-block; border-radius: 12px; cursor: pointer; }
-    .contador { font-size: 0.9em; color: #555; margin-top: 0.3em; }
+    .panel-etiquetas span { display: inline-block; background: #e2e8f0; margin: 4px; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 0.9em; }
+    .panel-etiquetas span:hover { background: #cbd5e1; }
   </style>
 </head>
 <body>
@@ -20,19 +24,28 @@
   <h1>📚 Repositorio Normativo – Castilla y León</h1>
 </header>
 
-<section class="buscador">
-  <input type="text" id="filtroTexto" placeholder="🔍 Buscar palabra clave" />
-  <select id="filtroTipo">
-    <option value="">🗂️ Todos los tipos</option>
-  </select>
-  <input type="date" id="filtroDesde" />
-  <input type="date" id="filtroHasta" />
-  <button onclick="filtrar()">Buscar</button>
-</section>
+<div class="contenedor">
+  <div class="principal">
+    <section class="buscador">
+      <input type="text" id="filtroTexto" placeholder="🔍 Buscar palabra clave" />
+      <select id="filtroTipo">
+        <option value="">🗂️ Todos los tipos</option>
+      </select>
+      <input type="date" id="filtroDesde" />
+      <input type="date" id="filtroHasta" />
+      <button onclick="filtrar()">Buscar</button>
+    </section>
 
-<section class="resultados" id="resultados">
-  <p>🔎 Usa los filtros para buscar documentos por palabra, tipo o fecha.</p>
-</section>
+    <section class="resultados" id="resultados">
+      <p>🔎 Usa los filtros para buscar documentos por palabra, tipo o fecha.</p>
+    </section>
+  </div>
+
+  <aside class="lateral">
+    <h3>📌 Palabras clave</h3>
+    <div class="panel-etiquetas" id="panelEtiquetas"></div>
+  </aside>
+</div>
 
 <script src="data.js"></script>
 <script>
@@ -83,7 +96,7 @@ function mostrar(lista) {
       <div class="etiquetas">
         ${doc.etiquetas.map(e => `<span onclick="buscarPorEtiqueta('${e}')">${e}</span>`).join("")}
       </div>
-      <p class="contador">🔗 <a href="${doc.url}" target="_blank">Ver documento</a></p>
+      <p>🔗 <a href="${doc.url}" target="_blank">Ver documento</a></p>
     `;
     cont.appendChild(div);
   });
@@ -94,7 +107,28 @@ function buscarPorEtiqueta(etiqueta) {
   filtrar();
 }
 
+function contarEtiquetas() {
+  const conteo = {};
+  documentos.forEach(doc => {
+    doc.etiquetas.forEach(et => {
+      const clave = et.toLowerCase();
+      conteo[clave] = (conteo[clave] || 0) + 1;
+    });
+  });
+
+  const panel = document.getElementById("panelEtiquetas");
+  const etiquetasOrdenadas = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+
+  etiquetasOrdenadas.forEach(([etiqueta, cantidad]) => {
+    const span = document.createElement("span");
+    span.textContent = `${etiqueta} (${cantidad})`;
+    span.onclick = () => buscarPorEtiqueta(etiqueta);
+    panel.appendChild(span);
+  });
+}
+
 cargarTipos();
+contarEtiquetas();
 </script>
 
 </body>
