@@ -42,7 +42,7 @@
 </div>
 
 <div id="definicion"></div>
-<script src="data.js"></script>
+
 <script>
 // Diccionario jurídico
 const definiciones = {
@@ -57,7 +57,25 @@ const definiciones = {
   "enfermedad grave": "Permiso por cuidado de familiar con afección grave."
 };
 
-// Índice de artículos cargado externamente
+// Datos de ejemplo (puedes moverlos a data.js más adelante)
+const articulos = [
+  {
+    numero: "Art. 5",
+    titulo: "Permisos por motivos familiares",
+    norma: "Decreto 59/2013",
+    fecha: "2023-04-01",
+    etiquetas: ["familia", "permiso retribuido"],
+    documento: "https://www.example.com/documentos/art5.pdf"
+  },
+  {
+    numero: "Art. 9",
+    titulo: "Reducción de jornada por guarda legal",
+    norma: "Decreto 59/2013",
+    fecha: "2022-11-15",
+    etiquetas: ["guarda legal", "jornada"],
+    documento: "https://www.example.com/documentos/art9.pdf"
+  }
+];
 
 // Buscar por palabra clave
 function buscarPorPalabraClave() {
