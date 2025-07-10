@@ -1,45 +1,101 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Repositorio de Normas</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        h1 {
-            color: #0056b3;
-        }
-        .document-list a {
-            display: block;
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            text-decoration: none;
-            color: #007bff;
-        }
-        .document-list a:hover {
-            background-color: #e9e9e9;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Repositorio Normativo – CSIF</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; background: #f0f2f5; }
+    header { background: #1f2937; color: white; padding: 1em; text-align: center; }
+    .buscador, .resultados { max-width: 900px; margin: auto; padding: 1em; }
+    .buscador input, .buscador select { padding: 0.5em; margin-right: 0.5em; }
+    .tarjeta { background: white; border-left: 5px solid #3b82f6; margin: 1em 0; padding: 1em; border-radius: 6px; }
+    .etiquetas span { background: #dbeafe; padding: 4px 8px; margin: 3px; display: inline-block; border-radius: 12px; cursor: pointer; }
+    .contador { font-size: 0.9em; color: #555; margin-top: 0.3em; }
+  </style>
 </head>
 <body>
-    <h1>Bienvenido a tu Repositorio de Normas</h1>
-    <p>Aquí puedes acceder a los documentos que has subido. Haz clic en cada uno para probar el "salto al PDF".</p>
 
-    <div class="document-list">
-        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf" target="_blank">Ver Decreto 59/2013 (abre en nueva pestaña)</a>
-        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/CONVENIO+COLECTIVO+21-06-2023.pdf" target="_blank">Ver Convenio Colectivo (abre en nueva pestaña)</a>
-        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/ACUERDO_COMPL.+ESPEC.+33+AGENTES+MEDIOAMBIENTALES.pdf" target="_blank">Ver Acuerdo Agentes Medioambientales (abre en nueva pestaña)</a>
-        <a href="https://github.com/MatillaCsif/normas-legales-cyl/raw/d3969c91041ed691efab30ee779f8a75f95e1bdb/Acta%20(modificada)+CP+14-6-2024.pdf" target="_blank">Ver Acta (modificada) CP 14-6-2024 (abre en nueva pestaña)</a>
-    </div>
+<header>
+  <h1>📚 Repositorio Normativo – Castilla y León</h1>
+</header>
 
-    <p>Pronto construiremos la funcionalidad de búsqueda y visualización contextual.</p>
+<section class="buscador">
+  <input type="text" id="filtroTexto" placeholder="🔍 Buscar palabra clave" />
+  <select id="filtroTipo">
+    <option value="">🗂️ Todos los tipos</option>
+  </select>
+  <input type="date" id="filtroDesde" />
+  <input type="date" id="filtroHasta" />
+  <button onclick="filtrar()">Buscar</button>
+</section>
+
+<section class="resultados" id="resultados">
+  <p>🔎 Usa los filtros para buscar documentos por palabra, tipo o fecha.</p>
+</section>
+
+<script src="data.js"></script>
+<script>
+function cargarTipos() {
+  const tipos = [...new Set(documentos.map(d => d.tipo))];
+  const filtroTipo = document.getElementById("filtroTipo");
+  tipos.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    filtroTipo.appendChild(opt);
+  });
+}
+
+function filtrar() {
+  const texto = document.getElementById("filtroTexto").value.toLowerCase();
+  const tipo = document.getElementById("filtroTipo").value;
+  const desde = document.getElementById("filtroDesde").value;
+  const hasta = document.getElementById("filtroHasta").value;
+
+  const resultados = documentos.filter(doc => {
+    const coincideTexto = texto === "" || doc.etiquetas.some(e => e.toLowerCase().includes(texto));
+    const coincideTipo = tipo === "" || doc.tipo === tipo;
+    const coincideDesde = !desde || doc.fecha >= desde;
+    const coincideHasta = !hasta || doc.fecha <= hasta;
+    return coincideTexto && coincideTipo && coincideDesde && coincideHasta;
+  });
+
+  mostrar(resultados);
+}
+
+function mostrar(lista) {
+  const cont = document.getElementById("resultados");
+  cont.innerHTML = "";
+
+  if (lista.length === 0) {
+    cont.innerHTML = "<p>⚠️ No se encontraron documentos.</p>";
+    return;
+  }
+
+  lista.forEach(doc => {
+    const div = document.createElement("div");
+    div.className = "tarjeta";
+    div.innerHTML = `
+      <h3>${doc.titulo}</h3>
+      <p><strong>Tipo:</strong> ${doc.tipo} | <strong>Fecha:</strong> ${doc.fecha}</p>
+      <p><strong>Etiquetas:</strong></p>
+      <div class="etiquetas">
+        ${doc.etiquetas.map(e => `<span onclick="buscarPorEtiqueta('${e}')">${e}</span>`).join("")}
+      </div>
+      <p class="contador">🔗 <a href="${doc.url}" target="_blank">Ver documento</a></p>
+    `;
+    cont.appendChild(div);
+  });
+}
+
+function buscarPorEtiqueta(etiqueta) {
+  document.getElementById("filtroTexto").value = etiqueta;
+  filtrar();
+}
+
+cargarTipos();
+</script>
+
 </body>
 </html>
