@@ -5,16 +5,20 @@
   <meta charset="UTF-8" />
   <title>Repositorio Normativo – CSIF</title>
   <style>
-    body { font-family: sans-serif; margin: 0; background: #f0f2f5; }
+    body { font-family: sans-serif; margin: 0; background: #f8fafc; }
     header { background: #1f2937; color: white; padding: 1em; text-align: center; }
-    .contenedor { display: flex; max-width: 1200px; margin: auto; }
-    .principal { flex: 3; padding: 1em; }
-    .lateral { flex: 1; padding: 1em; background: #fff; border-left: 1px solid #ddd; }
-    .buscador input, .buscador select { padding: 0.5em; margin-right: 0.5em; margin-bottom: 0.5em; width: 100%; }
-    .buscador button { padding: 0.5em; width: 100%; }
-    .tarjeta { background: white; border-left: 5px solid #3b82f6; margin: 1em 0; padding: 1em; border-radius: 6px; }
-    .etiquetas span { background: #dbeafe; padding: 4px 8px; margin: 3px; display: inline-block; border-radius: 12px; cursor: pointer; }
-    .panel-etiquetas span { display: inline-block; background: #e2e8f0; margin: 4px; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 0.9em; }
+    .contenedor { display: flex; max-width: 100%; }
+    .panel-lateral { width: 300px; background: #f1f5f9; padding: 1em; border-right: 1px solid #ccc; transition: all 0.3s ease; overflow-y: auto; }
+    .panel-lateral:hover { width: 350px; }
+    .principal { flex: 1; padding: 1em; }
+    .panel-titulo { font-weight: bold; margin-top: 1em; }
+    .subgrupo { margin-left: 1em; }
+    .buscador input, .buscador select, .buscador button { margin: 0.5em 0; padding: 0.5em; width: 100%; }
+    .resultados h2 { margin-top: 2em; border-bottom: 1px solid #ccc; padding-bottom: 0.3em; }
+    .tarjeta { background: white; padding: 1em; margin: 1em 0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .tarjeta h3 { margin-top: 0; }
+    .etiquetas span { background: #dbeafe; margin: 4px; padding: 4px 8px; border-radius: 10px; display: inline-block; cursor: pointer; }
+    .panel-etiquetas span { background: #e2e8f0; margin: 4px; padding: 4px 8px; border-radius: 10px; display: inline-block; cursor: pointer; }
     .panel-etiquetas span:hover { background: #cbd5e1; }
   </style>
 </head>
@@ -25,9 +29,24 @@
 </header>
 
 <div class="contenedor">
+  <aside class="panel-lateral">
+    <div>
+      <div class="panel-titulo">📁 Documentos Laborales</div>
+      <div class="subgrupo">
+        <label><input type="checkbox" value="Estatuto de los Trabajadores" onchange="filtrar()"> Estatuto de los Trabajadores</label><br>
+        <label><input type="checkbox" value="Convenio Colectivo" onchange="filtrar()"> Convenio Colectivo</label>
+      </div>
+      <div class="panel-titulo">📁 Documentos Funcionarios</div>
+      <div class="subgrupo">
+        <label><input type="checkbox" value="TRLEBEP" onchange="filtrar()"> TRLEBEP</label><br>
+        <label><input type="checkbox" value="Ley 7/2005" onchange="filtrar()"> Ley 7/2005</label>
+      </div>
+    </div>
+  </aside>
+
   <div class="principal">
     <section class="buscador">
-      <input type="text" id="filtroTexto" placeholder="🔍 Buscar palabra clave" />
+      <input type="text" id="filtroTexto" placeholder="🔍 Buscar palabra clave" onkeydown="if(event.key==='Enter') filtrar()" />
       <select id="filtroTipo">
         <option value="">🗂️ Todos los tipos</option>
       </select>
@@ -37,14 +56,13 @@
     </section>
 
     <section class="resultados" id="resultados">
-      <p>🔎 Usa los filtros para buscar documentos por palabra, tipo o fecha.</p>
+      <p>🔎 Usa los filtros o haz clic en una palabra o documento para ver los resultados.</p>
+    </section>
+
+    <section class="panel-etiquetas" id="panelEtiquetas">
+      <!-- Aquí se mostrará la nube de etiquetas -->
     </section>
   </div>
-
-  <aside class="lateral">
-    <h3>📌 Palabras clave</h3>
-    <div class="panel-etiquetas" id="panelEtiquetas"></div>
-  </aside>
 </div>
 
 <script src="data.js"></script>
@@ -66,12 +84,17 @@ function filtrar() {
   const desde = document.getElementById("filtroDesde").value;
   const hasta = document.getElementById("filtroHasta").value;
 
+  // recogida de checkboxes
+  const checks = [...document.querySelectorAll(".panel-lateral input[type=checkbox]:checked")];
+  const seleccionados = checks.map(c => c.value);
+
   const resultados = documentos.filter(doc => {
     const coincideTexto = texto === "" || doc.etiquetas.some(e => e.toLowerCase().includes(texto));
     const coincideTipo = tipo === "" || doc.tipo === tipo;
     const coincideDesde = !desde || doc.fecha >= desde;
     const coincideHasta = !hasta || doc.fecha <= hasta;
-    return coincideTexto && coincideTipo && coincideDesde && coincideHasta;
+    const coincideDoc = seleccionados.length === 0 || seleccionados.some(sel => doc.titulo.includes(sel));
+    return coincideTexto && coincideTipo && coincideDesde && coincideHasta && coincideDoc;
   });
 
   mostrar(resultados);
@@ -86,19 +109,30 @@ function mostrar(lista) {
     return;
   }
 
+  const agrupados = {};
   lista.forEach(doc => {
-    const div = document.createElement("div");
-    div.className = "tarjeta";
-    div.innerHTML = `
-      <h3>${doc.titulo}</h3>
-      <p><strong>Tipo:</strong> ${doc.tipo} | <strong>Fecha:</strong> ${doc.fecha}</p>
-      <p><strong>Etiquetas:</strong></p>
-      <div class="etiquetas">
-        ${doc.etiquetas.map(e => `<span onclick="buscarPorEtiqueta('${e}')">${e}</span>`).join("")}
-      </div>
-      <p>🔗 <a href="${doc.url}" target="_blank">Ver documento</a></p>
-    `;
-    cont.appendChild(div);
+    const año = doc.fecha?.split("-")[0] || "Sin fecha";
+    if (!agrupados[año]) agrupados[año] = [];
+    agrupados[año].push(doc);
+  });
+
+  Object.keys(agrupados).sort((a,b) => b.localeCompare(a)).forEach(año => {
+    const h2 = document.createElement("h2");
+    h2.textContent = `Año ${año}`;
+    cont.appendChild(h2);
+    agrupados[año].forEach(doc => {
+      const div = document.createElement("div");
+      div.className = "tarjeta";
+      div.innerHTML = `
+        <h3>${doc.titulo}</h3>
+        <p><strong>Tipo:</strong> ${doc.tipo} | <strong>Fecha:</strong> ${doc.fecha}</p>
+        <div class="etiquetas">
+          ${doc.etiquetas.map(e => `<span onclick="buscarPorEtiqueta('${e}')">${e}</span>`).join("")}
+        </div>
+        <p>🔗 <a href="${doc.url}" target="_blank">Ver documento</a></p>
+      `;
+      cont.appendChild(div);
+    });
   });
 }
 
