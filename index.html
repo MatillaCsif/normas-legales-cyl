@@ -8,9 +8,8 @@
     body { font-family: sans-serif; margin: 0; background: #f8fafc; }
     header { background: #1f2937; color: white; padding: 1em; text-align: center; }
     .contenedor { display: flex; max-width: 100%; }
-    .panel-lateral { width: 300px; background: #f1f5f9; padding: 1em; border-right: 1px solid #ccc; transition: all 0.3s ease; overflow-y: auto; }
-    .panel-lateral:hover { width: 350px; }
-    .principal { flex: 1; padding: 1em; }
+    .panel-lateral { width: 280px; background: #f1f5f9; padding: 1em; border-right: 1px solid #ccc; height: 100vh; overflow-y: auto; }
+    .principal { flex: 1; padding: 1em; overflow-x: hidden; }
     .panel-titulo { font-weight: bold; margin-top: 1em; }
     .subgrupo { margin-left: 1em; }
     .buscador input, .buscador select, .buscador button { margin: 0.5em 0; padding: 0.5em; width: 100%; }
@@ -29,24 +28,16 @@
 </header>
 
 <div class="contenedor">
-  <aside class="panel-lateral">
+  <aside class="panel-lateral" id="panelDocumentos">
     <div>
-      <div class="panel-titulo">📁 Documentos Laborales</div>
-      <div class="subgrupo">
-        <label><input type="checkbox" value="Estatuto de los Trabajadores" onchange="filtrar()"> Estatuto de los Trabajadores</label><br>
-        <label><input type="checkbox" value="Convenio Colectivo" onchange="filtrar()"> Convenio Colectivo</label>
-      </div>
-      <div class="panel-titulo">📁 Documentos Funcionarios</div>
-      <div class="subgrupo">
-        <label><input type="checkbox" value="TRLEBEP" onchange="filtrar()"> TRLEBEP</label><br>
-        <label><input type="checkbox" value="Ley 7/2005" onchange="filtrar()"> Ley 7/2005</label>
-      </div>
+      <div class="panel-titulo">📁 Documentos</div>
+      <div id="listaDocumentos"></div>
     </div>
   </aside>
 
   <div class="principal">
     <section class="buscador">
-      <input type="text" id="filtroTexto" placeholder="🔍 Buscar palabra clave" onkeydown="if(event.key==='Enter') filtrar()" />
+      <input type="text" id="filtroTexto" placeholder="🔍 Buscar palabra clave o raíz" />
       <select id="filtroTipo">
         <option value="">🗂️ Todos los tipos</option>
       </select>
@@ -78,22 +69,37 @@ function cargarTipos() {
   });
 }
 
+function cargarCheckboxes() {
+  const panel = document.getElementById("listaDocumentos");
+  documentos.forEach(doc => {
+    const label = document.createElement("label");
+    label.innerHTML = '<input type="checkbox" value="' + doc.titulo + '" onchange="filtrar()"> ' + doc.titulo;
+    panel.appendChild(label);
+    panel.appendChild(document.createElement("br"));
+  });
+}
+
+function normalizar(texto) {
+  return texto.toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "") // elimina acentos
+    .replace(/s$/, "") // quita plurales simples
+    .replace(/es$/, "") // quita terminaciones comunes
+    .trim();
+}
+
 function filtrar() {
-  const texto = document.getElementById("filtroTexto").value.toLowerCase();
+  const texto = normalizar(document.getElementById("filtroTexto").value);
   const tipo = document.getElementById("filtroTipo").value;
   const desde = document.getElementById("filtroDesde").value;
   const hasta = document.getElementById("filtroHasta").value;
-
-  // recogida de checkboxes
-  const checks = [...document.querySelectorAll(".panel-lateral input[type=checkbox]:checked")];
-  const seleccionados = checks.map(c => c.value);
+  const checks = [...document.querySelectorAll("#listaDocumentos input:checked")].map(c => c.value);
 
   const resultados = documentos.filter(doc => {
-    const coincideTexto = texto === "" || doc.etiquetas.some(e => e.toLowerCase().includes(texto));
+    const coincideTexto = texto === "" || doc.etiquetas.some(e => normalizar(e).includes(texto));
     const coincideTipo = tipo === "" || doc.tipo === tipo;
     const coincideDesde = !desde || doc.fecha >= desde;
     const coincideHasta = !hasta || doc.fecha <= hasta;
-    const coincideDoc = seleccionados.length === 0 || seleccionados.some(sel => doc.titulo.includes(sel));
+    const coincideDoc = checks.length === 0 || checks.includes(doc.titulo);
     return coincideTexto && coincideTipo && coincideDesde && coincideHasta && coincideDoc;
   });
 
@@ -145,7 +151,7 @@ function contarEtiquetas() {
   const conteo = {};
   documentos.forEach(doc => {
     doc.etiquetas.forEach(et => {
-      const clave = et.toLowerCase();
+      const clave = normalizar(et);
       conteo[clave] = (conteo[clave] || 0) + 1;
     });
   });
@@ -161,8 +167,18 @@ function contarEtiquetas() {
   });
 }
 
-cargarTipos();
-contarEtiquetas();
+// Activar búsqueda con Enter
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("filtroTexto").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      filtrar();
+    }
+  });
+  cargarTipos();
+  cargarCheckboxes();
+  contarEtiquetas();
+});
 </script>
 
 </body>
