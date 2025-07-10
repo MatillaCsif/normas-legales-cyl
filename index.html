@@ -39,22 +39,22 @@
   <aside class="panel-lateral" id="panelDocumentos">
     <div>
       <div class="categoria">📘 Normativa General</div>
-        <label class="documento"><input type="checkbox" value="Estatuto de los Trabajadores (2025)" onchange="filtrar()"> Estatuto de los Trabajadores (2025)</label>
-        <label class="documento"><input type="checkbox" value="TRLEBEP (2025)" onchange="filtrar()"> TRLEBEP (2025)</label>
+        <label class="documento"><input type="checkbox" value="estatuto_trabajadores" onchange="filtrar()"> Estatuto de los Trabajadores (2025)</label>
+        <label class="documento"><input type="checkbox" value="trlebep" onchange="filtrar()"> TRLEBEP (2025)</label>
 
       <div class="categoria">📗 Normativa Autonómica</div>
-        <label class="documento"><input type="checkbox" value="Ley 7/2005 (2005)" onchange="filtrar()"> Ley 7/2005 (2005)</label>
-        <label class="documento"><input type="checkbox" value="Decreto 59/2013 (2016)" onchange="filtrar()"> Decreto 59/2013 (2016)</label>
-        <label class="documento"><input type="checkbox" value="Decreto 136/2002 (2002)" onchange="filtrar()"> Decreto 136/2002 (2002)</label>
-        <label class="documento"><input type="checkbox" value="Convenio Colectivo (2023)" onchange="filtrar()"> Convenio Colectivo (2023)</label>
+        <label class="documento"><input type="checkbox" value="ley_72005" onchange="filtrar()"> Ley 7/2005 (2005)</label>
+        <label class="documento"><input type="checkbox" value="decreto_592013" onchange="filtrar()"> Decreto 59/2013 (2016)</label>
+        <label class="documento"><input type="checkbox" value="decreto_1362002" onchange="filtrar()"> Decreto 136/2002 (2002)</label>
+        <label class="documento"><input type="checkbox" value="convenio_2023" onchange="filtrar()"> Convenio Colectivo (2023)</label>
 
       <div class="categoria">📙 Interpretación Autonómica</div>
-        <label class="documento"><input type="checkbox" value="INSTRUCCIONES DGFP (varios)" onchange="filtrar()"> INSTRUCCIONES DGFP (varios)</label>
-        <label class="documento"><input type="checkbox" value="Actas CP (2023–2024)" onchange="filtrar()"> Actas CP (2023–2024)</label>
+        <label class="documento"><input type="checkbox" value="instrucciones_dgfp" onchange="filtrar()"> INSTRUCCIONES DGFP (varios)</label>
+        <label class="documento"><input type="checkbox" value="actas_cp" onchange="filtrar()"> Actas CP (2023–2024)</label>
 
       <div class="categoria">📕 Sectores</div>
         <div class="subcategoria">– Medioambiente</div>
-          <label class="documento"><input type="checkbox" value="Acuerdo Agentes Medioambientales (2024)" onchange="filtrar()"> Acuerdo Agentes Medioambientales (2024)</label>
+          <label class="documento"><input type="checkbox" value="acuerdo_agentes" onchange="filtrar()"> Acuerdo Agentes Medioambientales (2024)</label>
     </div>
   </aside>
 
@@ -99,7 +99,7 @@ function filtrar() {
     const coincideTipo = tipo === "" || doc.tipo === tipo;
     const coincideDesde = !desde || doc.fecha >= desde;
     const coincideHasta = !hasta || doc.fecha <= hasta;
-    const coincideDoc = checks.length === 0 || checks.some(c => doc.titulo.includes(c));
+    const coincideDoc = checks.length === 0 || checks.includes(doc.id);
     return coincideTexto && coincideTipo && coincideDesde && coincideHasta && coincideDoc;
   });
 
