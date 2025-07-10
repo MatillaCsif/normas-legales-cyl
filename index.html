@@ -99,7 +99,7 @@ function filtrar() {
     const coincideTipo = tipo === "" || doc.tipo === tipo;
     const coincideDesde = !desde || doc.fecha >= desde;
     const coincideHasta = !hasta || doc.fecha <= hasta;
-    const coincideDoc = checks.length === 0 || checks.includes(doc.titulo);
+    const coincideDoc = checks.length === 0 || checks.some(c => doc.titulo.includes(c));
     return coincideTexto && coincideTipo && coincideDesde && coincideHasta && coincideDoc;
   });
 
@@ -161,7 +161,7 @@ function contarEtiquetas() {
 
   etiquetasOrdenadas.forEach(([etiqueta, cantidad]) => {
     const span = document.createElement("span");
-    span.textContent = `${etiqueta} (${cantidad})`;
+    span.textContent = `${etiqueta.charAt(0).toUpperCase() + etiqueta.slice(1)} (${cantidad})`;
     span.onclick = () => buscarPorEtiqueta(etiqueta);
     span.onmouseover = () => mostrarDef(etiqueta);
     span.onmouseout = ocultarDef;
