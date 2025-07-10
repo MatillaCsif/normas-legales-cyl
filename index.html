@@ -14,13 +14,19 @@
     .subcategoria { margin-left: 1em; font-style: italic; }
     .documento { margin-left: 2em; display: block; margin-bottom: 0.5em; }
     .documento input { margin-right: 5px; }
-    .buscador input, .buscador select, .buscador button { margin: 0.5em 0; padding: 0.5em; width: 100%; }
+    .buscador { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1em; }
+    .buscador input[type="text"] { flex: 1; padding: 0.5em; }
+    .buscador button { background: #0ea5e9; border: none; color: white; padding: 0.5em 1em; border-radius: 4px; cursor: pointer; }
+    .buscador button:hover { background: #0284c7; }
+    .buscador input[type="date"], .buscador select { padding: 0.5em; }
     .resultados h2 { margin-top: 2em; border-bottom: 1px solid #ccc; padding-bottom: 0.3em; }
     .tarjeta { background: white; padding: 1em; margin: 1em 0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .tarjeta h3 { margin-top: 0; }
     .etiquetas span { background: #dbeafe; margin: 4px; padding: 4px 8px; border-radius: 10px; display: inline-block; cursor: pointer; }
+    .panel-etiquetas { margin-top: 2em; }
     .panel-etiquetas span { background: #e2e8f0; margin: 4px; padding: 4px 8px; border-radius: 10px; display: inline-block; cursor: pointer; }
     .panel-etiquetas span:hover { background: #cbd5e1; }
+    #defBox { position: fixed; bottom: 20px; right: 20px; background: #fef9c3; border-left: 5px solid #eab308; padding: 12px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); max-width: 300px; display: none; z-index: 10; }
   </style>
 </head>
 <body>
@@ -54,13 +60,13 @@
 
   <div class="principal">
     <section class="buscador">
-      <input type="text" id="filtroTexto" placeholder="🔍 Buscar palabra clave o raíz" />
+      <input type="text" id="filtroTexto" placeholder="🔍 Palabra clave o raíz" />
+      <button onclick="filtrar()">🔍</button>
       <select id="filtroTipo">
         <option value="">🗂️ Todos los tipos</option>
       </select>
       <input type="date" id="filtroDesde" />
       <input type="date" id="filtroHasta" />
-      <button onclick="filtrar()">Buscar</button>
     </section>
 
     <section class="resultados" id="resultados">
@@ -71,11 +77,122 @@
   </div>
 </div>
 
+<div id="defBox"></div>
+
 <script src="data.js"></script>
 <script src="definiciones.js"></script>
 
 <script>
-// Funciones JS para búsqueda, definición, y filtrado irían aquí (idéntico a versiones anteriores)
+function normalizar(t) {
+  return t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/s$/, "").replace(/es$/, "").trim();
+}
+
+function filtrar() {
+  const texto = normalizar(document.getElementById("filtroTexto").value);
+  const tipo = document.getElementById("filtroTipo").value;
+  const desde = document.getElementById("filtroDesde").value;
+  const hasta = document.getElementById("filtroHasta").value;
+  const checks = [...document.querySelectorAll("#panelDocumentos input:checked")].map(c => c.value);
+
+  const resultados = documentos.filter(doc => {
+    const coincideTexto = texto === "" || doc.etiquetas.some(e => normalizar(e).includes(texto));
+    const coincideTipo = tipo === "" || doc.tipo === tipo;
+    const coincideDesde = !desde || doc.fecha >= desde;
+    const coincideHasta = !hasta || doc.fecha <= hasta;
+    const coincideDoc = checks.length === 0 || checks.includes(doc.titulo);
+    return coincideTexto && coincideTipo && coincideDesde && coincideHasta && coincideDoc;
+  });
+
+  mostrar(resultados);
+}
+
+function mostrar(lista) {
+  const cont = document.getElementById("resultados");
+  cont.innerHTML = "";
+
+  if (lista.length === 0) {
+    cont.innerHTML = "<p>⚠️ No se encontraron documentos.</p>";
+    return;
+  }
+
+  const agrupados = {};
+  lista.forEach(doc => {
+    const año = doc.fecha?.split("-")[0] || "Sin fecha";
+    if (!agrupados[año]) agrupados[año] = [];
+    agrupados[año].push(doc);
+  });
+
+  Object.keys(agrupados).sort((a,b) => b.localeCompare(a)).forEach(año => {
+    const h2 = document.createElement("h2");
+    h2.textContent = `Año ${año}`;
+    cont.appendChild(h2);
+    agrupados[año].forEach(doc => {
+      const div = document.createElement("div");
+      div.className = "tarjeta";
+      div.innerHTML = `
+        <h3>${doc.titulo}</h3>
+        <p><strong>Tipo:</strong> ${doc.tipo} | <strong>Fecha:</strong> ${doc.fecha}</p>
+        <div class="etiquetas">
+          ${doc.etiquetas.map(e => `<span onclick="buscarPorEtiqueta('${e}')" onmouseover="mostrarDef('${e}')" onmouseout="ocultarDef()">${e}</span>`).join("")}
+        </div>
+        <p>🔗 <a href="${doc.url}" target="_blank">Ver documento</a></p>
+      `;
+      cont.appendChild(div);
+    });
+  });
+}
+
+function buscarPorEtiqueta(etiqueta) {
+  document.getElementById("filtroTexto").value = etiqueta;
+  filtrar();
+}
+
+function contarEtiquetas() {
+  const conteo = {};
+  documentos.forEach(doc => {
+    doc.etiquetas.forEach(et => {
+      const clave = normalizar(et);
+      conteo[clave] = (conteo[clave] || 0) + 1;
+    });
+  });
+
+  const panel = document.getElementById("panelEtiquetas");
+  const etiquetasOrdenadas = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+
+  etiquetasOrdenadas.forEach(([etiqueta, cantidad]) => {
+    const span = document.createElement("span");
+    span.textContent = `${etiqueta} (${cantidad})`;
+    span.onclick = () => buscarPorEtiqueta(etiqueta);
+    span.onmouseover = () => mostrarDef(etiqueta);
+    span.onmouseout = ocultarDef;
+    panel.appendChild(span);
+  });
+}
+
+function mostrarDef(palabra) {
+  const def = definiciones[normalizar(palabra)];
+  const box = document.getElementById("defBox");
+  if (def) {
+    box.innerHTML = `<strong>${palabra}:</strong> ${def}`;
+    box.style.display = "block";
+  } else {
+    box.style.display = "none";
+  }
+}
+
+function ocultarDef() {
+  document.getElementById("defBox").style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("filtroTexto").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      filtrar();
+    }
+  });
+  contarEtiquetas();
+});
 </script>
 
 </body>
