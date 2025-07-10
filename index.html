@@ -42,6 +42,7 @@
 </div>
 
 <div id="definicion"></div>
+<script src="data.js"></script>
 <script>
 // Diccionario jurídico
 const definiciones = {
@@ -56,49 +57,7 @@ const definiciones = {
   "enfermedad grave": "Permiso por cuidado de familiar con afección grave."
 };
 
-// Índice de artículos
-const articulos = [
-  {
-    numero: "Artículo 3",
-    titulo: "Duración máxima de la jornada anual",
-    etiquetas: ["jornada", "funcionarios"],
-    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
-    norma: "Decreto 59/2013",
-    fecha: "2013-09-05"
-  },
-  {
-    numero: "Artículo 39",
-    titulo: "Permisos retribuidos por fallecimiento, mudanza o funciones sindicales",
-    etiquetas: ["permiso retribuido", "conciliación"],
-    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
-    norma: "Decreto 59/2013",
-    fecha: "2013-09-05"
-  },
-  {
-    numero: "Artículo 45",
-    titulo: "Lactancia, prematuridad y guarda legal",
-    etiquetas: ["lactancia", "guarda legal", "conciliación", "familia"],
-    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
-    norma: "Decreto 59/2013",
-    fecha: "2013-09-05"
-  },
-  {
-    numero: "Artículo 48",
-    titulo: "Permisos por violencia de género",
-    etiquetas: ["violencia de género", "conciliación", "familia"],
-    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
-    norma: "Decreto 59/2013",
-    fecha: "2013-09-05"
-  },
-  {
-    numero: "Artículo 49",
-    titulo: "Permisos por maternidad y paternidad",
-    etiquetas: ["maternidad", "familia", "permiso retribuido"],
-    documento: "Decreto+59+2013+texto+consolidado+a+18_03_2016.pdf",
-    norma: "Decreto 59/2013",
-    fecha: "2013-09-05"
-  }
-];
+// Índice de artículos cargado externamente
 
 // Buscar por palabra clave
 function buscarPorPalabraClave() {
