@@ -26,6 +26,8 @@
     .panel-etiquetas { margin-top: 2em; }
     .panel-etiquetas span { background: #e2e8f0; margin: 4px; padding: 4px 8px; border-radius: 10px; display: inline-block; cursor: pointer; }
     .panel-etiquetas span:hover { background: #cbd5e1; }
+    .resumen-resultados { color: #475569; font-weight: 600; margin-bottom: 1em; }
+    .resumen-resultados span { font-weight: 700; color: #2563eb; }
     #defBox { position: fixed; bottom: 20px; right: 20px; background: #fef9c3; border-left: 5px solid #eab308; padding: 12px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); max-width: 300px; display: none; z-index: 10; }
   </style>
 </head>
@@ -88,25 +90,26 @@ function normalizar(t) {
 }
 
 function filtrar() {
-  const texto = normalizar(document.getElementById("filtroTexto").value);
+  const textoOriginal = document.getElementById("filtroTexto").value.trim();
+  const texto = normalizar(textoOriginal);
   const tipo = document.getElementById("filtroTipo").value;
   const desde = document.getElementById("filtroDesde").value;
   const hasta = document.getElementById("filtroHasta").value;
   const checks = [...document.querySelectorAll("#panelDocumentos input:checked")].map(c => c.value);
 
   const resultados = documentos.filter(doc => {
-    const coincideTexto = texto === "" || doc.etiquetas.some(e => normalizar(e).includes(texto));
+    const coincideTexto = texto === "" || normalizar(doc.titulo || "").includes(texto) || doc.etiquetas.some(e => normalizar(e).includes(texto));
     const coincideTipo = tipo === "" || doc.tipo === tipo;
-    const coincideDesde = !desde || doc.fecha >= desde;
-    const coincideHasta = !hasta || doc.fecha <= hasta;
+    const coincideDesde = !desde || !doc.fecha || doc.fecha >= desde;
+    const coincideHasta = !hasta || !doc.fecha || doc.fecha <= hasta;
     const coincideDoc = checks.length === 0 || checks.includes(doc.id);
     return coincideTexto && coincideTipo && coincideDesde && coincideHasta && coincideDoc;
   });
 
-  mostrar(resultados);
+  mostrar(resultados, textoOriginal);
 }
 
-function mostrar(lista) {
+function mostrar(lista, termino = "") {
   const cont = document.getElementById("resultados");
   cont.innerHTML = "";
 
@@ -114,6 +117,8 @@ function mostrar(lista) {
     cont.innerHTML = "<p>⚠️ No se encontraron documentos.</p>";
     return;
   }
+
+  cont.appendChild(crearResumenResultados(lista.length, termino));
 
   const agrupados = {};
   lista.forEach(doc => {
@@ -130,12 +135,12 @@ function mostrar(lista) {
       const div = document.createElement("div");
       div.className = "tarjeta";
       div.innerHTML = `
-        <h3>${doc.titulo}</h3>
-        <p><strong>Tipo:</strong> ${doc.tipo} | <strong>Fecha:</strong> ${doc.fecha}</p>
+        <h3>${resaltarTexto(doc.titulo, termino)}</h3>
+        <p><strong>Tipo:</strong> ${escapeHTML(doc.tipo || "Sin tipo")} | <strong>Fecha:</strong> ${escapeHTML(doc.fecha || "Sin fecha")}</p>
         <div class="etiquetas">
-          ${doc.etiquetas.map(e => `<span onclick="buscarPorEtiqueta('${e}')" onmouseover="mostrarDef('${e}')" onmouseout="ocultarDef()">${e}</span>`).join("")}
+          ${doc.etiquetas.map(e => crearEtiquetaHTML(e, termino)).join("")}
         </div>
-        <p>🔗 <a href="${doc.url}" target="_blank">Ver documento</a></p>
+        <p>🔗 <a href="${escapeHTML(doc.url)}" target="_blank" rel="noopener noreferrer">Ver documento</a></p>
       `;
       cont.appendChild(div);
     });
@@ -169,6 +174,55 @@ function contarEtiquetas() {
   });
 }
 
+function poblarTipos() {
+  const select = document.getElementById("filtroTipo");
+  const tipos = Array.from(new Set(documentos
+    .map(doc => doc.tipo)
+    .filter(Boolean)))
+    .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+
+  tipos.forEach(tipo => {
+    const option = document.createElement("option");
+    option.value = tipo;
+    option.textContent = `🗂️ ${tipo}`;
+    select.appendChild(option);
+  });
+}
+
+function crearResumenResultados(total, termino) {
+  const resumen = document.createElement("p");
+  resumen.className = "resumen-resultados";
+  const documentosTexto = total === 1 ? "1 documento" : `${total} documentos`;
+  const terminoSeguro = escapeHTML(termino);
+  resumen.innerHTML = `Se encontraron <span>${escapeHTML(documentosTexto)}</span>${termino ? ` para la búsqueda "${terminoSeguro}"` : ""}.`;
+  return resumen;
+}
+
+function resaltarTexto(texto = "", termino = "") {
+  const textoSeguro = escapeHTML(texto);
+  if (!termino) return textoSeguro;
+  const terminoSeguro = escapeHTML(termino);
+  const terminoEscapado = terminoSeguro.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (!terminoEscapado) return textoSeguro;
+  const regex = new RegExp(`(${terminoEscapado})`, "gi");
+  return textoSeguro.replace(regex, '<span class="highlight-term">$1</span>');
+}
+
+function crearEtiquetaHTML(etiqueta, termino) {
+  const etiquetaEscapada = etiqueta.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  const contenido = resaltarTexto(etiqueta, termino);
+  return `<span onclick="buscarPorEtiqueta('${etiquetaEscapada}')" onmouseover="mostrarDef('${etiquetaEscapada}')" onmouseout="ocultarDef()">${contenido}</span>`;
+}
+
+function escapeHTML(texto = "") {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function mostrarDef(palabra) {
   const def = definiciones[normalizar(palabra)];
   const box = document.getElementById("defBox");
@@ -191,6 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
       filtrar();
     }
   });
+  poblarTipos();
   contarEtiquetas();
 });
 </script>
